@@ -71,3 +71,17 @@ button {
     font-size: 20px;
     margin-top: 20px;
 }
+
+audio {
+    position: absolute;
+    visibility: hidden;
+}
+
+div#content {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
+    background-color: #fff !important;
+}

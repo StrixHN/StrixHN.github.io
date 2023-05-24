@@ -1,6 +1,6 @@
 (function () {
 
-  const audio = new Audio('audio/keeper_strix.mp3');
+  let audio, content;
   
   
   //////////////////////////////
@@ -345,15 +345,15 @@
       app.start();
       scheduleText();
       audio.play();
-    });
+    }, 1000);
   };
 
   let makeWaitPage = () => {
-    document.body.innerHTML = '<div class="waitDiv">One moment please,<br/>preloading images...</div>';
+    content.innerHTML = '<div class="waitDiv">One moment please,<br/>preloading images...</div>';
   };
   
   let makeReadyPage = () => {
-    document.body.innerHTML = '<div class="readyDiv"><p>Ready.</p><p>We recommend you maximize your browser window before pressing “play” below to start.</p><p>Please note that these visuals are computed on the fly, which makes each viewing unique, but may be too heavy for some devices (phones in particular). If you encounter any issue, please <a href="todo">watch&nbsp;the&nbsp;video&nbsp;version</a>.</p><p><button id="playButton">Play</button></p></div>';
+    content.innerHTML = '<div class="readyDiv"><p>Ready.</p><p>We recommend you maximize your browser window before pressing “play” below to start.</p><p>Please note that these visuals are computed on the fly, which makes each viewing unique, but may be too heavy for some devices (phones in particular). If you encounter any issue, please <a href="todo">watch&nbsp;the&nbsp;video&nbsp;version</a>.</p><p><button id="playButton">Play</button></p></div>';
     document.querySelector('button#playButton').addEventListener('click', startPlaying);
   };
 
@@ -365,6 +365,8 @@
   };
   
   window.addEventListener('DOMContentLoaded', () => {
+    audio = document.querySelector('audio');
+    content = document.querySelector('div#content');
     makeWaitPage();
     fetch(`saved-plays/spots-${Math.floor(nbSavedPlays*Math.random())}.dat`, {mode: 'cors'})
       .then(res => res.arrayBuffer())
