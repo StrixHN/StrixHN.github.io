@@ -85,3 +85,13 @@ div#content {
     height: 100vh;
     background-color: #fff !important;
 }
+
+h2 {
+    margin-bottom: 6px;
+}
+
+h4 {
+    margin-top: 0px;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
