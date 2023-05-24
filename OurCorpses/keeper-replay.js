@@ -310,6 +310,7 @@
     app = new PIXI.Application({ background: '#fff', antialias: false, width: size, height: size, transparent: false, autoStart: false});
     app2 = new PIXI.Application({ background: '#fff', antialias: false, width: size, height: size, autoStart: false, backgroundAlpha: 0,
 				  clearBeforeRender: false, preserveDrawingBuffer: true});
+    app.render();
     let canvas = app.view;
     makePage(canvas);
     
