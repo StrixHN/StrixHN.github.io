@@ -68,23 +68,19 @@
     {name: '13.png', dimensions: [389, 442], center: [151, 203], radius: 82}
   ];
   
-  
   const portraits = [
-    {name: 'female1.jpg', focus: {cx: 482/1024, cy: 590/1024, rx: 460/2048, ry: 560/2048}, text:'Female portrait 1 text'},
-    {name: 'female2.jpg', focus: {cx: 510/1024, cy: 590/1024, rx: 500/2048, ry: 500/2048}, text:'Female portrait 2 text'},
-    {name: 'female3.jpg', focus: {cx: 516/1024, cy: 600/1024, rx: 495/2048, ry: 500/2048}, text:'Female portrait 3 text'},
-    {name: 'female6.jpg', focus: {cx: 510/1024, cy: 605/1024, rx: 510/2048, ry: 510/2048}, text:'Female portrait 6 text'},
-    {name: 'female4.jpg', focus: {cx: 500/1024, cy: 620/1024, rx: 486/2048, ry: 545/2048}, text:'Female portrait 4 text'},
-    {name: 'female7.jpg', focus: {cx: 545/1024, cy: 605/1024, rx: 530/2048, ry: 500/2048}, text:'Female portrait 7 text'},
-    
-    {name: 'male1.jpg', focus: {cx: 500/1024, cy: 610/1024, rx: 520/2048, ry: 480/2048}, text:'Male portrait 1 text'},
-    {name: 'male3.jpg', focus: {cx: 512/1024, cy: 618/1024, rx: 530/2048, ry: 530/2048}, text:'Male portrait 3 text'},
-    {name: 'male5.jpg', focus: {cx: 508/1024, cy: 604/1024, rx: 512/2048, ry: 470/2048}, text:'Male portrait 5 text'},
-    {name: 'male6.jpg', focus: {cx: 516/1024, cy: 597/1024, rx: 533/2048, ry: 505/2048}, text:'Male portrait 6 text'},
-    {name: 'male9.jpg', focus: {cx: 515/1024, cy: 590/1024, rx: 492/2048, ry: 493/2048}, text:'Male portrait 9 text'},
-//    {name: 'male10.jpg', focus: {cx: 507/1024, cy: 611/1024, rx: 517/2048, ry: 486/2048}, text:'Male portrait 10 text'},
-    {name: 'male11.jpg', focus: {cx: 515/1024, cy: 603/1024, rx: 587/2048, ry: 524/2048}, text:'Male portrait 11 text'},
-//    {name: 'male12.jpg', focus: {cx: 522/1024, cy: 605/1024, rx: 530/2048, ry: 504/2048}, text:'Male portrait 12 text'},
+    {name: 'female3.jpg', focus: {cx: 516/1024, cy: 600/1024, rx: 495/2048, ry: 500/2048}, text:'“Her mind was capable of empathy.”'},
+    {name: 'male1.jpg', focus: {cx: 500/1024, cy: 610/1024, rx: 520/2048, ry: 480/2048}, text:'“He had answers.”'},
+    {name: 'male11.jpg', focus: {cx: 515/1024, cy: 603/1024, rx: 587/2048, ry: 524/2048}, text:'“He believed he could be happy in a job.”'},
+    {name: 'female2.jpg', focus: {cx: 510/1024, cy: 590/1024, rx: 500/2048, ry: 500/2048}, text:'“She was absorbed in seeking connections.”'},
+    {name: 'female6.jpg', focus: {cx: 510/1024, cy: 605/1024, rx: 510/2048, ry: 510/2048}, text:'“She thought she could trust him.”'},
+    {name: 'male5.jpg', focus: {cx: 508/1024, cy: 604/1024, rx: 512/2048, ry: 470/2048}, text:'“He imagined he was something special.”'},
+    {name: 'female7.jpg', focus: {cx: 545/1024, cy: 605/1024, rx: 530/2048, ry: 500/2048}, text:'“She wanted to be cured.”'},
+    {name: 'male6.jpg', focus: {cx: 516/1024, cy: 597/1024, rx: 533/2048, ry: 505/2048}, text:'“He thought there was still time to talk to his father.”'},
+    {name: 'male3.jpg', focus: {cx: 512/1024, cy: 618/1024, rx: 530/2048, ry: 530/2048}, text:'“He assumed being normal was the answer.”'},
+    {name: 'female1.jpg', focus: {cx: 482/1024, cy: 590/1024, rx: 460/2048, ry: 560/2048}, text:'“She didn’t believe in love.”'},
+    {name: 'male9.jpg', focus: {cx: 515/1024, cy: 590/1024, rx: 492/2048, ry: 493/2048}, text:'“He thought his story was over.”'},
+    {name: 'female4.jpg', focus: {cx: 500/1024, cy: 620/1024, rx: 486/2048, ry: 545/2048}, text:'“She was convinced music could save her.”'},
   ];
 
   const nbImages = portraits.length + 1;
@@ -376,7 +372,6 @@
     worker.onmessage = () => {
       // Start computing spots as soon as possible
       worker.onmessage = onWorkerSendsSpot;
-      // TODO : Try "all" -- send all of "spotsPerImage"
       worker.postMessage({action: 'all', nbSpots: spotsPerImage});
       checkTextureLoad();
     };
