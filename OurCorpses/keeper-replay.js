@@ -1,8 +1,14 @@
 (function () {
 
+  const audio = new Audio('audio/keeper_strix.mp3');
+  
+  
   //////////////////////////////
   // CONFIGURATION PARAMETERS //
   //////////////////////////////
+
+
+  const nbSavedPlays = 10;
   
   const textDivHeight = 32;
   const marginPercent = 3;
@@ -67,7 +73,7 @@
     {name: 'male5.jpg', focus: {cx: 508/1024, cy: 604/1024, rx: 512/2048, ry: 470/2048}, text:'“He imagined he was something special.”'},
     {name: 'female7.jpg', focus: {cx: 545/1024, cy: 605/1024, rx: 530/2048, ry: 500/2048}, text:'“She wanted to be cured.”'},
     {name: 'male6.jpg', focus: {cx: 516/1024, cy: 597/1024, rx: 533/2048, ry: 505/2048}, text:'“He thought there was still time to talk to his father.”'},
-    {name: 'male3.jpg', focus: {cx: 512/1024, cy: 618/1024, rx: 530/2048, ry: 530/2048}, text:'“He assumed being normal was the answer.”'},
+    {name: 'male3.jpg', focus: {cx: 512/1024, cy: 618/1024, rx: 530/2048, ry: 530/2048}, text:'“He was trying to be normal.”'},
     {name: 'female1.jpg', focus: {cx: 482/1024, cy: 590/1024, rx: 460/2048, ry: 560/2048}, text:'“She didn’t believe in love.”'},
     {name: 'male9.jpg', focus: {cx: 515/1024, cy: 590/1024, rx: 492/2048, ry: 493/2048}, text:'“He thought his story was over.”'},
     {name: 'female4.jpg', focus: {cx: 500/1024, cy: 620/1024, rx: 486/2048, ry: 545/2048}, text:'“She was convinced music could save her.”'},
@@ -338,6 +344,7 @@
       globalStartTime = imageStartTime = Date.now();
       app.start();
       scheduleText();
+      audio.play();
     });
   };
 
@@ -351,7 +358,7 @@
   };
 
   let checkTextureLoad = () => {
-    if (spots.reduce((acc, x) => acc && x.texture.valid, true))
+    if (audio.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA && spots.reduce((acc, x) => acc && x.texture.valid, true))
       makeReadyPage();
     else
       setTimeout(checkTextureLoad, 200);
@@ -359,7 +366,7 @@
   
   window.addEventListener('DOMContentLoaded', () => {
     makeWaitPage();
-    fetch('saved-plays/spots.dat', {mode: 'cors'})
+    fetch(`saved-plays/spots-${Math.floor(nbSavedPlays*Math.random())}.dat`, {mode: 'cors'})
       .then(res => res.arrayBuffer())
       .then((buffer) => {
 	let store = new SpotStore();
