@@ -1,0 +1,15 @@
+[
+  {name: '01.png', dimensions: [455, 491], center: [238, 233], radius: 110},
+  {name: '02.png', dimensions: [544, 743], center: [265, 350], radius: 150},
+  {name: '03.png', dimensions: [486, 685], center: [260, 300], radius: 130},
+  {name: '04.png', dimensions: [681, 699], center: [350, 300], radius: 160},
+  {name: '05.png', dimensions: [555, 678], center: [297, 232], radius: 130},
+  {name: '06.png', dimensions: [552, 734], center: [302, 329], radius: 140},
+  {name: '07.png', dimensions: [456, 581], center: [257, 262], radius: 120},
+  {name: '08.png', dimensions: [427, 415], center: [193, 179], radius: 70},
+  {name: '09.png', dimensions: [380, 537], center: [186, 254], radius: 60},
+  {name: '10.png', dimensions: [320, 388], center: [148, 168], radius: 60},
+  {name: '11.png', dimensions: [403, 460], center: [203, 220], radius: 82},
+  {name: '12.png', dimensions: [434, 531], center: [213, 238], radius: 60},
+  {name: '13.png', dimensions: [389, 442], center: [151, 203], radius: 82}
+];
