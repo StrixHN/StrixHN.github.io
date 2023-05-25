@@ -58,14 +58,11 @@ class SpotStore {
   }
 
   loadArrayBuffer (buffer) {
-    console.log(buffer);
     const spotSize = 1 + 1 + 2 + 2 + 2 + 2*2;
     const view = new DataView(buffer);
-    console.log(view);
     let nbSpots = view.getUint32(0);
     let maxScale = view.getFloat32(4);
     let maxAlpha = view.getFloat32(8);
-    console.log(`Nb spots: ${nbSpots}, maxScale: ${maxScale}, maxAlpha: ${maxAlpha}`);
     let pos = 12;
     for  (let i=0; i<nbSpots; i++) {
       this.storage.put({

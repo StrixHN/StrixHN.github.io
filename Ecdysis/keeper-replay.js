@@ -1,6 +1,7 @@
 (function () {
 
   let audio, content;
+  let isPlaying = false;
   
   
   //////////////////////////////
@@ -37,10 +38,10 @@
   ];
 
   const textAnimationTiming = {
-    startAppearing: 10,
-    fullyVisible: 25,
-    startDisappearing: 31,
-    fullyGone: 35
+    startAppearing: 15,
+    fullyVisible: 28,
+    startDisappearing: 33,
+    fullyGone: 37
   };
   
   /////////////
@@ -169,7 +170,6 @@
       }
       spotColors.push(colorNum(c));
       if (t % imageDuration == 0) {
-	console.log(colorHash(c));
 	portraits[t/imageDuration].textColor = colorHash(c);
       }
     }
@@ -207,55 +207,57 @@
   let availableSpots;
 
   let scheduleText = () => {
+    if (currentImage == nbImages-1) return;
     setTimeout(() => {
       textDiv.innerHTML = portraits[currentImage].text;
       textDiv.style.opacity = 0;
       textDiv.style.filter = 'blur(3px)';
       setTimeout(() => {
-	console.log(portraits[currentImage].textColor);
 	textDiv.style.color = portraits[currentImage].textColor;
 	textDiv.style.transition = `all ${textAnimationTiming.fullyVisible-textAnimationTiming.startAppearing}s`;
 	textDiv.style.filter = '';
 	textDiv.style.opacity = .7;
       });
-    }, 1000*textAnimationTiming.startAppearing);
+    });
     setTimeout(() => {
       textDiv.style.transition = `all ${textAnimationTiming.fullyGone-textAnimationTiming.startDisappearing}s`;
       textDiv.style.opacity = 0;
       textDiv.style.filter = 'blur(15px)';
-    }, 1000*textAnimationTiming.startDisappearing);
+    }, 1000*(textAnimationTiming.startDisappearing - textAnimationTiming.startAppearing));
   };
 
   let imageDrawnSpots = 0;
   let totalSpots = 0;
+  let textAppeared = false;
   
   let step = () => {
-    let now = Date.now();
-    imageTime = (now-imageStartTime)/1000;
-    totalTime = (now-globalStartTime)/1000;
+    let now = audio.currentTime;
+    imageTime = now-imageStartTime;
+    totalTime = now-globalStartTime;
 
     if (imageTime >= imageDuration) {
       if (currentImage == nbImages) {
 	done = true;
       } else {
-	console.log('Finishing image. Spots in queue: '+availableSpots.length);
 	imageStartTime = now;
+	imageTime = 0;
 	imageDrawnSpots = 0;
-	// availableSpots.clear();
+	textAppeared = false;
 	currentImage++;
 	preprocessImageNbSpots(spotsPerImage[currentImage]);
-	// worker.postMessage({action: 'next', nbSpots: spotsPerImage[currentImage]});
-	if (currentImage < nbImages-1) scheduleText();
       }
       return;
     }
     
     if (!done) {
+      if (!textAppeared && imageTime >= textAnimationTiming.startAppearing) {
+	textAppeared = true;
+	scheduleText();
+      }
       let neededSpots = neededNbSpotsImage();
       for (; imageDrawnSpots < neededSpots; imageDrawnSpots++, totalSpots++) {
 	let spotData = availableSpots.take();
 	if (!spotData) {
-	  // console.log('#');
 	  break;
 	}
 	spotData.scale*= size;
@@ -284,11 +286,12 @@
     
     let newAppearingSprites = [];
     for (let s of appearingSprites) {
-      if (now - s.startTime > spotFadeInTime) {
+      let age = 1000*(now - s.startTime);
+      if (age > spotFadeInTime) {
 	s.sprite.alpha = s.alpha;
 	appearedSprites.push(s);
       } else {
-	let ratio = (now-s.startTime)/spotFadeInTime;
+	let ratio = age/spotFadeInTime;
 	let smoothRatio = .5*(1+Math.cos(Math.PI*(1-ratio)));
 	s.sprite.alpha = smoothRatio*s.alpha;
 	newAppearingSprites.push(s);
@@ -305,8 +308,7 @@
   };
 
   let makePage = (canvas) => {
-    document.body.innerHTML = '';
-    let size = canvas.width;
+    content.innerHTML = '';
     let holderDiv = document.createElement('div');
     holderDiv.classList.add('holder');
     holderDiv.style.width = size+'px';
@@ -316,7 +318,7 @@
     textDiv.style.opacity = 0;
     holderDiv.appendChild(textDiv);
     holderDiv.appendChild(canvas);
-    document.body.appendChild(holderDiv);
+    content.appendChild(holderDiv);
   };
 
   let startPlaying = () => {
@@ -328,8 +330,7 @@
     app2 = new PIXI.Application({ background: '#fff', antialias: false, width: size, height: size, autoStart: false, backgroundAlpha: 0,
 				  clearBeforeRender: false, preserveDrawingBuffer: true});
     app.render();
-    let canvas = app.view;
-    makePage(canvas);
+    makePage(app.view);
     
     preprocessImageNbSpots(spotsPerImage[0]);
     
@@ -341,27 +342,40 @@
       stableSpotsSprite.zIndex = 1;
       app.stage.addChild(stableSpotsSprite);
       app.ticker.add(step);
-      globalStartTime = imageStartTime = Date.now();
+      globalStartTime = imageStartTime = 0;
+      isPlaying = true;
+      window.addEventListener('blur', () => {
+	audio.pause();
+      });
+      window.addEventListener('focus', () => {
+	if (isPlaying) audio.play();
+      });
+      audio.addEventListener('ended', () => {
+	isPlaying = false;
+      });
       app.start();
-      scheduleText();
       audio.play();
     }, 1000);
   };
 
   let makeWaitPage = () => {
-    content.innerHTML = '<div class="waitDiv"><h2>Ecdysis</h2><h4>Strix</h4><p>One moment please,<br/>preloading images...</p></div>';
+    content.innerHTML = '<div class="waitDiv"><h2>Ecdysis</h2><h4>Strix</h4><p>One moment please,<br/>preloading data...</p></div>';
   };
   
   let makeReadyPage = () => {
-    content.innerHTML = '<div class="readyDiv"><h2>Ecdysis</h2><h4>Strix</h4><p>Ready.</p><p>We recommend you maximize your browser window before pressing “play” below to start.</p><p>Please note that these visuals are computed on the fly, which makes each viewing unique, but may be too heavy for some devices. If you encounter any issue, please <a href="todo">watch&nbsp;the&nbsp;video&nbsp;version</a>.</p><p><button id="playButton">Play</button></p></div>';
+    content.innerHTML = '<div class="readyDiv"><h2>Ecdysis</h2><h4>Strix</h4><p>&nbsp;</p><p>We recommend you maximize your browser window before pressing “play” below to start.</p><p>Please note that these visuals are computed on the fly, which makes each viewing unique, but may be too heavy for some devices. If you encounter any issue, please <a href="todo">watch&nbsp;the&nbsp;video&nbsp;version</a>.</p><p><button id="playButton">Play</button></p></div>';
     document.querySelector('button#playButton').addEventListener('click', startPlaying);
   };
 
   let checkTextureLoad = () => {
-    if (audio.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA && spots.reduce((acc, x) => acc && x.texture.valid, true))
+    let audioReady = audio.readyState == HTMLMediaElement.HAVE_ENOUGH_DATA;
+    let imageReady = spots.reduce((acc, x) => acc && x.texture.valid, true);
+    if (audioReady && imageReady) {
       makeReadyPage();
-    else
+    } else {
+      content.innerHTML = `<div class="waitDiv"><h2>Ecdysis</h2><h4>Strix</h4><p>One moment please,<br/>preloading images and audio...</p><p>Audio: ${audioReady ? 'ready' : 'loading'}<br/>Images: ${imageReady ? 'ready' : 'loading'}</div>`;
       setTimeout(checkTextureLoad, 200);
+    }
   };
   
   window.addEventListener('DOMContentLoaded', () => {

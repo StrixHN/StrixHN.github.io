@@ -12,6 +12,7 @@ div.holder {
     top: 50vh;
     left: 50vw;
     transform: translate(-50%, -50%);
+    z-index: 1;
 }
 
 canvas {
@@ -38,7 +39,7 @@ div.text {
 
 div.waitDiv {
     position: absolute;
-    top: 50vh;
+    top: 45vh;
     left: 50vw;
     transform: translate(-50%, -50%);
     font-size: 18px;
@@ -51,7 +52,7 @@ div.waitDiv {
 
 div.readyDiv {
     position: absolute;
-    top: 50vh;
+    top: 45vh;
     left: 50vw;
     transform: translate(-50%, -50%);
     font-size: 18px;
@@ -94,4 +95,24 @@ h4 {
     margin-top: 0px;
     font-size: 14px;
     margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+
+    div.text {
+	font-size: 16px;
+    }
+
+    div.waitDiv {
+	width: 50vw;
+	font-size: 15px;
+	padding: 16px;
+    }
+
+    div.readyDiv {
+	font-size: 15px;
+	padding: 16px;
+	width: 70vw;
+    }
+
 }

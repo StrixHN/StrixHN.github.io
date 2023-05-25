@@ -352,11 +352,11 @@
   };
 
   let makeWaitPage = () => {
-    document.body.innerHTML = '<div class="waitDiv">One moment please,<br/>preloading images...</div>';
+    document.body.innerHTML = '<div class="waitDiv">One moment please,<br/>preloading images and audio...</div>';
   };
   
   let makeReadyPage = () => {
-    document.body.innerHTML = '<div class="readyDiv"><p>Ready.</p><p>We recommend you maximize your browser window before pressing “play” below to start.</p><p>Please note that these visuals are computed on the fly, which makes each viewing unique, but may be too heavy for some devices (phones in particular). If you encounter any issue, please <a href="todo">watch&nbsp;the&nbsp;video&nbsp;version</a>.</p><p><button id="playButton">Play</button></p></div>';
+    document.body.innerHTML = '<div class="readyDiv"><p>&nbsp;</p><p>We recommend you maximize your browser window before pressing “play” below to start.</p><p>Please note that these visuals are computed on the fly, which makes each viewing unique, but may be too heavy for some devices (phones in particular). If you encounter any issue, please <a href="todo">watch&nbsp;the&nbsp;video&nbsp;version</a>.</p><p><button id="playButton">Play</button></p></div>';
     document.querySelector('button#playButton').addEventListener('click', startPlaying);
   };
 
