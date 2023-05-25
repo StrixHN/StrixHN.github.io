@@ -231,7 +231,8 @@
   let textAppeared = false;
   
   let step = () => {
-    let now = audio.currentTime;
+    let now = audio.currentTime-1;
+    if (now < 0) return;
     imageTime = now-imageStartTime;
     totalTime = now-globalStartTime;
 
@@ -336,26 +337,25 @@
     
     stableSpotsTexture = PIXI.Texture.from(app2.view);
     app2.render();
-    setTimeout(() => {
-      stableSpotsTexture.update();
-      stableSpotsSprite = new PIXI.Sprite(stableSpotsTexture);
-      stableSpotsSprite.zIndex = 1;
-      app.stage.addChild(stableSpotsSprite);
-      app.ticker.add(step);
-      globalStartTime = imageStartTime = 0;
-      isPlaying = true;
-      window.addEventListener('blur', () => {
-	audio.pause();
-      });
-      window.addEventListener('focus', () => {
-	if (isPlaying) audio.play();
-      });
-      audio.addEventListener('ended', () => {
-	isPlaying = false;
-      });
-      app.start();
-      audio.play();
-    }, 1000);
+    
+    stableSpotsTexture.update();
+    stableSpotsSprite = new PIXI.Sprite(stableSpotsTexture);
+    stableSpotsSprite.zIndex = 1;
+    app.stage.addChild(stableSpotsSprite);
+    app.ticker.add(step);
+    globalStartTime = imageStartTime = 0;
+    isPlaying = true;
+    window.addEventListener('blur', () => {
+      audio.pause();
+    });
+    window.addEventListener('focus', () => {
+      if (isPlaying) audio.play();
+    });
+    audio.addEventListener('ended', () => {
+      isPlaying = false;
+    });
+    app.start();
+    audio.play();
   };
 
   let makeWaitPage = () => {
