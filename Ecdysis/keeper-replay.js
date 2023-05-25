@@ -381,6 +381,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     audio = document.querySelector('audio');
     content = document.querySelector('div#content');
+    audio.load();
     makeWaitPage();
     fetch(`saved-plays/spots-${Math.floor(nbSavedPlays*Math.random())}.dat`, {mode: 'cors'})
       .then(res => res.arrayBuffer())
