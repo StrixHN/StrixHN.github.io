@@ -191,7 +191,6 @@
   let createdSpots = 0;
 
   let transferStabilizedSprites = () => {
-    let start = Date.now();
     app2.stage.removeChildren();
     for (let s of appearedSprites) {
       app2.stage.addChild(s.sprite);
