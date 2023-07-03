@@ -362,7 +362,7 @@
   };
   
   let makeReadyPage = () => {
-    content.innerHTML = '<div class="readyDiv"><h2>Ecdysis</h2><h4>Strix</h4><p>&nbsp;</p><p>We recommend you maximize your browser window before pressing “play” below to start.</p><p>Please note that these visuals are computed on the fly, which makes each viewing unique, but may be too heavy for some devices. If you encounter any issue, please <a href="todo">watch&nbsp;the&nbsp;video&nbsp;version</a>.</p><p><button id="playButton">Play</button></p></div>';
+    content.innerHTML = '<div class="readyDiv"><h2>Ecdysis</h2><h4>Strix</h4><p>&nbsp;</p><p>We recommend you maximize your browser window before pressing “play” below to start.</p><p>Please note that these visuals are computed on the fly, which makes each viewing unique, but may be too heavy for some devices. If you encounter any issue, please <a href="https://youtu.be/jfLP7X8Mr_4">watch&nbsp;the&nbsp;video&nbsp;version</a>.</p><p><button id="playButton">Play</button></p></div>';
     document.querySelector('button#playButton').addEventListener('click', startPlaying);
   };
 
