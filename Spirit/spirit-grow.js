@@ -96,14 +96,19 @@
     nbSpirals++;
   };
 
+  const twoDigitHex = a => (a < 16) ? '0'+a.toString(16) : a.toString(16);
   
-  let addDot = (x, y) => {
+  const addDot = (x, y) => {
+    let rgb = [1,2,3].map(x => Math.floor(32+96*Math.random()));
+    rgb[Math.floor(1+2*Math.random())] += 100;
+    let color = '#'+rgb.map(twoDigitHex).join('');
     dots.push({
       x: x,
       y: y,
       age: 0,
       size: 0,
-      weight: 0
+      weight: 0,
+      color: color
     });
   };
   
@@ -167,7 +172,6 @@
     // Process dots
 
     context2.clearRect(0, 0, w, h);
-    context2.fillStyle = '#0088aa';
     let distances = [];
     for (let d of dots) {
       d.age++;
@@ -201,15 +205,16 @@
 	  d.ny = d.y - f[1]/d.weight;
 	}
       }
-      context2.beginPath();
-      context2.arc(d.x, d.y, 3*d.size, 0, 2 * Math.PI, false);
-      context2.fill();
     }
     for (let d of dots) {
       if (d.weight > 0) {
 	d.x = d.nx;
 	d.y = d.ny;
       }
+      context2.beginPath();
+      context2.fillStyle = d.color;
+      context2.arc(d.x, d.y, 3*d.size, 0, 2 * Math.PI, false);
+      context2.fill();
     }
     step++;
     if (step % 40 == 0) {
