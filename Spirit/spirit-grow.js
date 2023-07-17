@@ -1,7 +1,22 @@
 ( function() {
 
-  let attraction = 100;
-  let repulsion = 4000;
+  const attractionData = {
+    min: 80,
+    max: 120,
+    cos: 1,
+    sin: 0,
+    ds: Math.sin(Math.PI/300),
+    dc: Math.cos(Math.PI/300)
+  };
+  
+  const repulsionData = {
+    min: 3000,
+    max: 6000,
+    cos: 0,
+    sin: 1,
+    ds: Math.sin(Math.PI/317),
+    dc: Math.cos(Math.PI/317)
+  };
   
   let segmentsPercircle = 100;
   let angleIncrement = 2*Math.PI/segmentsPercircle;
@@ -171,6 +186,9 @@
 
     // Process dots
 
+    let attraction = attractionData.min + attractionData.cos*(attractionData.max-attractionData.min);
+    let repulsion = repulsionData.min + repulsionData.cos*(repulsionData.max-repulsionData.min);
+
     context2.clearRect(0, 0, w, h);
     let distances = [];
     for (let d of dots) {
@@ -216,6 +234,15 @@
       context2.arc(d.x, d.y, 3*d.size, 0, 2 * Math.PI, false);
       context2.fill();
     }
+
+    let c = repulsionData.cos*repulsionData.dc - repulsionData.sin*repulsionData.ds;
+    repulsionData.sin = repulsionData.cos*repulsionData.ds + repulsionData.sin*repulsionData.dc;
+    repulsionData.cos = c;
+    
+    c = attractionData.cos*attractionData.dc - attractionData.sin*attractionData.ds;
+    attractionData.sin = attractionData.cos*attractionData.ds + attractionData.sin*attractionData.dc;
+    attractionData.cos = c;
+    
     step++;
     if (step % 40 == 0) {
       context.globalAlpha = .1;
