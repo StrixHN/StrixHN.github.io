@@ -2,7 +2,7 @@
 
   const attraction = 100;
 
-  const maxNbDots = 100;
+  const maxNbDots = 500;
 
   const wallBounceFactor = 0.8;
 
@@ -217,8 +217,8 @@
     }
     for (let d of dots) {
       if (d.age >= growthTime) {
-	d.x += d.sx;
-	d.y += d.sy;
+	d.x += .01*d.sx;
+	d.y += .01*d.sy;
       }
       if (d.x < 0) {
 	d.x = -d.x;
