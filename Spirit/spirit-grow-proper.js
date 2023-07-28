@@ -216,7 +216,7 @@
 	    let d2 = dots[id2];
 	    if (id1 == id2 || !d2) continue;
 	    let dist = id1 > id2 ? distances[id1][id2] : distances[id2][id1];
-	    if (dist < d1.size + d2.size) {
+	    if (dist < Math.max(d1.size, d2.size)) {
 	      d1.x = (d1.weight*d1.x + d2.weight*d2.x)/(d1.weight+d2.weight);
 	      d1.y = (d1.weight*d1.y + d2.weight*d2.y)/(d1.weight+d2.weight);
 	      d1.sx = (d1.weight*d1.sx + d2.weight*d2.sx)/(d1.weight+d2.weight);
