@@ -1,8 +1,12 @@
 ( function() {
 
+  const dotSteps = 10;
+
   const attraction = 100;
 
-  const maxNbDots = 500;
+  const maxNbDots = 200;
+
+  const sizeScale  = 3;
 
   const wallBounceFactor = 0.8;
 
@@ -110,7 +114,6 @@
     rgb[Math.floor(1+2*Math.random())] += 100;
     let color = '#'+rgb.map(twoDigitHex).join('');
     dots.push({
-      id: dots.length,
       x: x,
       y: y,
       sx: 0,
@@ -182,68 +185,89 @@
     // Process dots
 
     context2.clearRect(0, 0, w, h);
+    context2.globalAlpha = 2/dotSteps;
 
-    let distances = [];
-    for (let i=0, l=dots.length; i<l; i++) {
-      distances.push([]);
-      const d1 = dots[i];
-      for (let j=0; j<i; j++) {
-	const d2 = dots[j];
-	const dx = d1.x-d2.x;
-	const dy = d1.y-d2.y;
-	distances[i][j] = Math.sqrt(dx*dx + dy*dy);
-      }
-    }
-    
-    for (let d of dots) {
-      d.age++;
-      if (d.age <= growthTime) {
-	d.weight = d.size = d.age / growthTime;
-      }
-      if (d.age >= growthTime) {
-	let f = [0, 0];
-	for (let d2 of dots) {
-	  if (d2 == d) continue;
-	  let dist = d.id > d2.id ? distances[d.id][d2.id] : distances[d2.id][d.id];
-	  let vx = (d.x-d2.x)/dist;
-	  let vy = (d.y-d2.y)/dist;
-	  let factor = attraction/(dist*dist);
-	  f[0] += factor*vx;
-	  f[1] += factor*vy;
+    for (let l=0; l<dotSteps; l++) {
+
+      let nbDots = dots.length;
+      
+      let distances = [];
+      for (let i=0; i<nbDots; i++) {
+	distances.push([]);
+	const d1 = dots[i];
+	for (let j=0; j<i; j++) {
+	  const d2 = dots[j];
+	  const dx = d1.x-d2.x;
+	  const dy = d1.y-d2.y;
+	  distances[i][j] = Math.sqrt(dx*dx + dy*dy);
 	}
-	d.sx -= f[0]/d.weight;
-	d.sy -= f[1]/d.weight;
       }
-    }
-    for (let d of dots) {
-      if (d.age >= growthTime) {
-	d.x += .01*d.sx;
-	d.y += .01*d.sy;
+
+      for (let id1=0; id1<nbDots; id1++) {
+	let d1 = dots[id1];
+	if (!d1) continue;
+	d1.age++;
+	if (d1.age <= growthTime) {
+	  d1.weight = d1.age / growthTime;
+	  d1.size = sizeScale*d1.weight;
+	} else {
+	  let f = [0, 0];
+	  for (let id2=0; id2<nbDots; id2++) {
+	    let d2 = dots[id2];
+	    if (id1 == id2 || !d2) continue;
+	    let dist = id1 > id2 ? distances[id1][id2] : distances[id2][id1];
+	    if (dist < d1.size + d2.size) {
+	      d1.x = (d1.weight*d1.x + d2.weight*d2.x)/(d1.weight+d2.weight);
+	      d1.y = (d1.weight*d1.y + d2.weight*d2.y)/(d1.weight+d2.weight);
+	      d1.sx = (d1.weight*d1.sx + d2.weight*d2.sx)/(d1.weight+d2.weight);
+	      d1.sy = (d1.weight*d1.sy + d2.weight*d2.sy)/(d1.weight+d2.weight);
+	      d1.color = d1.weight > d2.weight ? d1.color : d2.color;
+	      d1.weight = d1.weight + d2.weight;
+	      d1.size = sizeScale*Math.sqrt(d1.weight);
+	      dots[id2] = null;
+	    } else {
+	      let vx = (d1.x-d2.x)/dist;
+	      let vy = (d1.y-d2.y)/dist;
+	      let factor = d2.weight*attraction/(dist*dist);
+	      f[0] += factor*vx;
+	      f[1] += factor*vy;
+	    }
+	  }
+	  d1.sx -= f[0]/d1.weight;
+	  d1.sy -= f[1]/d1.weight;
+	}
       }
-      if (d.x < 0) {
-	d.x = -d.x;
-	d.sx *= -wallBounceFactor;
-	d.sy *= wallBounceFactor;
+      dots = dots.filter(d => (d != null));
+      for (let d of dots) {
+	if (d.age >= growthTime) {
+	  d.x += .01*d.sx/dotSteps;
+	  d.y += .01*d.sy/dotSteps;
+	}
+	if (d.x < 0) {
+	  d.x = -d.x;
+	  d.sx *= -wallBounceFactor;
+	  d.sy *= wallBounceFactor;
+	}
+	if (d.y < 0) {
+	  d.y = -d.y;
+	  d.sx *= wallBounceFactor;
+	  d.sy *= -wallBounceFactor;
+	}
+	if (d.x >= w) {
+	  d.x -= 2*(d.x-w);
+	  d.sx *= -wallBounceFactor;
+	  d.sy *= wallBounceFactor;
+	}
+	if (d.y >= h) {
+	  d.y -= 2*(d.y-h);
+	  d.sx *= wallBounceFactor;
+	  d.sy *= -wallBounceFactor;
+	}
+	context2.beginPath();
+	context2.fillStyle = d.color;
+	context2.arc(d.x, d.y, d.size, 0, 2 * Math.PI, false);
+	context2.fill();
       }
-      if (d.y < 0) {
-	d.y = -d.y;
-	d.sx *= wallBounceFactor;
-	d.sy *= -wallBounceFactor;
-      }
-      if (d.x >= w) {
-	d.x -= 2*(d.x-w);
-	d.sx *= -wallBounceFactor;
-	d.sy *= wallBounceFactor;
-      }
-      if (d.y >= h) {
-	d.y -= 2*(d.y-h);
-	d.sx *= wallBounceFactor;
-	d.sy *= -wallBounceFactor;
-      }
-      context2.beginPath();
-      context2.fillStyle = d.color;
-      context2.arc(d.x, d.y, 3*d.size, 0, 2 * Math.PI, false);
-      context2.fill();
     }
     
     step++;
