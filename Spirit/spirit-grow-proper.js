@@ -8,7 +8,7 @@
 
   const sizeScale  = 3;
 
-  const wallBounceFactor = 0.8;
+  const wallBounceFactor = 1;
 
   const growthTime = 30;
   const activeAge = 100;
@@ -203,6 +203,8 @@
 	}
       }
 
+      let maxWeight = 0;
+      let maxDot = null;
       for (let id1=0; id1<nbDots; id1++) {
 	let d1 = dots[id1];
 	if (!d1) continue;
@@ -211,6 +213,10 @@
 	  d1.weight = d1.age / growthTime;
 	  d1.size = sizeScale*d1.weight;
 	} else {
+	  if (d1.weight > maxWeight) {
+	    maxWeight = d1.weight;
+	    maxDot = d1;
+	  }
 	  let f = [0, 0];
 	  for (let id2=0; id2<nbDots; id2++) {
 	    let d2 = dots[id2];
@@ -238,6 +244,10 @@
 	}
       }
       dots = dots.filter(d => (d != null));
+      if (maxDot) {
+	maxDot.sx += (w/2 - maxDot.x)/10000;
+	maxDot.sy += (h/2 - maxDot.y)/10000;
+      }
       for (let d of dots) {
 	if (d.age >= growthTime) {
 	  d.x += .01*d.sx/dotSteps;
