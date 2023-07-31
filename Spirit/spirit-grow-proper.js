@@ -127,7 +127,7 @@
 
   const breakDotMaybe = (i) => {
     let od = dots[i];
-    if (od.weight < 10 || od.weight*Math.random() > 20) return false;
+    if (od.weight < 10 || od.weight*Math.random() < 20) return false;
     let weights = [];
     let w = od.weight;
     while (w > 2 && w > od.weight / 10) {
@@ -189,12 +189,13 @@
     for (let d of nd) {
       d.x -= cx;
       d.y -= cy;
-      d.sx = 10*cx;
-      d.sy = 10*cy;
+      d.sx = 20*d.x;
+      d.sy = 20*d.y;
       d.x += od.x;
       d.y += od.y;
       dots.push(d);
     }
+    console.log(nd);
     dots[i] = null;
     return true;
   };
