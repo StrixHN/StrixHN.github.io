@@ -141,8 +141,8 @@
       return {
 	x: 0,
 	y: 0,
-	sx: 0,
-	sy: 0,
+	sx: od.sx,
+	sy: od.sy,
 	age: od.age,
 	weight: w,
 	size: sizeScale*Math.sqrt(w),
@@ -189,8 +189,8 @@
     for (let d of nd) {
       d.x -= cx;
       d.y -= cy;
-      d.sx = 20*d.x;
-      d.sy = 20*d.y;
+      d.sx += 20*d.x;
+      d.sy += 20*d.y;
       d.x += od.x;
       d.y += od.y;
       dots.push(d);
