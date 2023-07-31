@@ -124,6 +124,80 @@
       color: color
     });
   };
+
+  const breakDotMaybe = (i) => {
+    let od = dots[i];
+    if (od.weight < 10 || od.weight*Math.random() > 20) return false;
+    let weights = [];
+    let w = od.weight;
+    while (w > 2 && w > od.weight / 10) {
+      let nw = w*(1+Math.random())/4;
+      weights.push(nw);
+      w -= nw;
+    }
+    weights.push(w);
+    weights.sort((a,b) => b-a);
+    let nd = weights.map((w) => {
+      return {
+	x: 0,
+	y: 0,
+	sx: 0,
+	sy: 0,
+	age: od.age,
+	weight: w,
+	size: sizeScale*Math.sqrt(w),
+	color: od.color
+      };
+    });
+    let a = 2*Math.PI*Math.random();
+    nd[1].x = (nd[0].size + nd[1].size)*Math.cos(a);
+    nd[1].y = (nd[0].size + nd[1].size)*Math.sin(a);
+    let fitOptions = [
+      {	c1: nd[0], c2: nd[1] },
+      { c1: nd[1], c2: nd[0] }
+    ];
+    const dc = Math.cos(Math.PI / 100);
+    const ds = Math.sin(Math.PI / 100);
+    for (let i=2; i<nd.length; i++) {
+      let ad = nd[i];
+      let option = fitOptions.shift();
+      let dx = option.c2.x-option.c1.x;
+      let dy = option.c2.y-option.c1.y;
+      let dist = Math.sqrt(dx*dx+dy*dy);
+      let cos = dx/dist;
+      let sin = dy/dist;
+      let d1 = ad.size + option.c1.size;
+      let d2 = ad.size + option.c2.size;
+      let x, y;
+      do {
+	let c = cos*dc - sin*ds;
+	sin = cos*ds + sin*dc;
+	cos = c;
+	x = option.c1.x + d1 * cos;
+	y = option.c1.y + d1 * sin;
+	dx = x-option.c2.x;
+	dy = y-option.c2.y;
+	dist = Math.sqrt(dx*dx + dy*dy);
+      } while (dist < d2)
+      ad.x = x;
+      ad.y = y;
+      fitOptions.push({c1: option.c1, c2: ad});
+      fitOptions.push({c1: ad, c2: option.c2});
+    }
+    let cx = nd.reduce((a,dot) => a + dot.x*dot.weight, 0) / od.weight;
+    let cy = nd.reduce((a,dot) => a + dot.y*dot.weight, 0) / od.weight;
+    for (let d of nd) {
+      d.x -= cx;
+      d.y -= cy;
+      d.sx = 10*cx;
+      d.sy = 10*cy;
+      d.x += od.x;
+      d.y += od.y;
+      dots.push(d);
+    }
+    dots[i] = null;
+    return true;
+  };
   
 
   let step = 0;
@@ -231,6 +305,7 @@
 	      d1.weight = d1.weight + d2.weight;
 	      d1.size = sizeScale*Math.sqrt(d1.weight);
 	      dots[id2] = null;
+	      if (breakDotMaybe(id1)) break;
 	    } else {
 	      let vx = (d1.x-d2.x)/dist;
 	      let vy = (d1.y-d2.y)/dist;
