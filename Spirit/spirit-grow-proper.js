@@ -108,12 +108,15 @@
   };
 
   const twoDigitHex = a => (a < 16) ? '0'+a.toString(16) : a.toString(16);
+  const randomColor = () => {
+    let rgb = [[32, 96], [64, 128], [128, 128]].map(x => Math.floor(x[0]+x[1]*Math.random()));
+    return '#'+rgb.map(twoDigitHex).join('');
+  }
   
   const addDot = (x, y) => {
     if (x < 0 || x >= w || y < 0 || y >= h) return;
-    let rgb = [1,2,3].map(x => Math.floor(32+96*Math.random()));
-    rgb[Math.floor(1+2*Math.random())] += 100;
-    let color = '#'+rgb.map(twoDigitHex).join('');
+    // let rgb = [1,2,3].map(x => Math.floor(32+96*Math.random()));
+    // rgb[Math.floor(1+2*Math.random())] += 100;
     dots.push({
       x: x,
       y: y,
@@ -122,7 +125,7 @@
       age: 0,
       size: 0,
       weight: 0,
-      color: color
+      color: randomColor()
     });
   };
 
@@ -138,7 +141,7 @@
     }
     weights.push(w);
     weights.sort((a,b) => b-a);
-    let nd = weights.map((w) => {
+    let nd = weights.map((w, i) => {
       return {
 	x: 0,
 	y: 0,
@@ -147,7 +150,7 @@
 	age: od.age,
 	weight: w,
 	size: sizeScale*Math.pow(w, 1/3),
-	color: od.color
+	color: (i==0) ? od.color : randomColor()
       };
     });
     let a = 2*Math.PI*Math.random();
@@ -351,10 +354,13 @@
     }
     
     step++;
-    if (step % 40 == 0) {
-      context.globalAlpha = .1;
-      context.fillStyle = '#000000';
+    if (step % 10 == 0) {
+      // context.globalAlpha = .1;
+      context.globalAlpha = 1;
+      context.globalCompositeOperation = 'multiply';
+      context.fillStyle = '#fad8d8';
       context.fillRect(0, 0, w, h);
+      context.globalCompositeOperation = 'source-over';
     }
 
     requestAnimationFrame(run);
