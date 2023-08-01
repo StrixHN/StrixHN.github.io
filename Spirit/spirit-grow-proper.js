@@ -9,6 +9,7 @@
   const sizeScale  = 3;
 
   const wallBounceFactor = 1;
+  const breakThreshold = 50;
 
   const growthTime = 30;
   const activeAge = 100;
@@ -127,7 +128,7 @@
 
   const breakDotMaybe = (i) => {
     let od = dots[i];
-    if (od.weight*Math.random() < 30) return false;
+    if (od.weight*Math.random() < breakThreshold) return false;
     let weights = [];
     let w = od.weight;
     while (w > 2 && w > od.weight / 10) {
@@ -145,7 +146,7 @@
 	sy: od.sy,
 	age: od.age,
 	weight: w,
-	size: sizeScale*Math.sqrt(w),
+	size: sizeScale*Math.pow(w, 1/3),
 	color: od.color
       };
     });
@@ -224,18 +225,11 @@
 	}
 	busy[Math.floor(s.x/busySquareSize), Math.floor(s.y/busySquareSize)]++;
       }
-      let a = s.angle - .5 + Math.random();
+      let a = s.angle - .3 + Math.random();
       let newX = s.x + s.size*Math.cos(a);
       let newY = s.y + s.size*Math.sin(a);
-      context.lineWidth = 3; //s.size/2;
-      context.globalAlpha = .7;
-      context.strokeStyle = '#000';
-      context.beginPath();
-      context.moveTo(s.x, s.y);
-      context.lineTo(newX, newY);
-      context.stroke();
       
-      context.lineWidth = 1.2; //s.size/2;
+      context.lineWidth = (.6+.4*Math.random())*Math.sqrt(s.size); //s.size/2;
       context.globalAlpha = .5+.5*Math.random();
       context.strokeStyle = '#ccf';
       context.beginPath();
@@ -304,7 +298,7 @@
 	      d1.sy = (d1.weight*d1.sy + d2.weight*d2.sy)/(d1.weight+d2.weight);
 	      d1.color = d1.weight > d2.weight ? d1.color : d2.color;
 	      d1.weight = d1.weight + d2.weight;
-	      d1.size = sizeScale*Math.sqrt(d1.weight);
+	      d1.size = sizeScale*Math.pow(d1.weight, 1/3);
 	      dots[id2] = null;
 	      if (breakDotMaybe(id1)) break;
 	    } else {
