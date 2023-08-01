@@ -9,7 +9,7 @@
   const sizeScale  = 3;
 
   const wallBounceFactor = 1;
-  const breakThreshold = 50;
+  const breakThreshold = 80;
 
   const growthTime = 30;
   const activeAge = 100;
