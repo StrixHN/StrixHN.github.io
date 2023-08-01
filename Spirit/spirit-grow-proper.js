@@ -131,7 +131,7 @@
     if (od.weight*Math.random() < breakThreshold) return false;
     let weights = [];
     let w = od.weight;
-    while (w > 2 && w > od.weight / 10) {
+    while (w > 2) {
       let nw = w*(1+Math.random())/4;
       weights.push(nw);
       w -= nw;
