@@ -14,7 +14,7 @@
   const growthTime = 30;
   const activeAge = 100;
   
-  let segmentsPercircle = 100;
+  let segmentsPercircle = 200;
   let angleIncrement = 2*Math.PI/segmentsPercircle;
   let sizeMultiplier = .99;
 
