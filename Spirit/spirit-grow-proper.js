@@ -9,7 +9,7 @@
   const sizeScale  = 3;
 
   const wallBounceFactor = 1;
-  const breakThreshold = 80;
+  const breakThreshold = 1800000;
 
   const growthTime = 30;
   const activeAge = 100;
@@ -23,7 +23,7 @@
 
   let dots = [];
   
-  let spiralsPerSecond = 4;
+  let spiralsPerSecond = 8;
   
   let startTime;
 
@@ -129,13 +129,15 @@
     });
   };
 
-  const breakDotMaybe = (i) => {
+  const breakDotMaybe = (i, energy) => {
     let od = dots[i];
-    if (od.weight*Math.random() < breakThreshold) return false;
+    // if (od.weight*Math.random() < breakThreshold) return false;
+    if (energy < breakThreshold) return false;
+    console.log('Breaking, energy = '+energy);
     let weights = [];
     let w = od.weight;
-    while (w > 2) {
-      let nw = w*(1+Math.random())/4;
+    while (w > 1) {
+      let nw = w*(1+Math.random())/5;
       weights.push(nw);
       w -= nw;
     }
@@ -295,15 +297,26 @@
 	    if (id1 == id2 || !d2) continue;
 	    let dist = id1 > id2 ? distances[id1][id2] : distances[id2][id1];
 	    if (dist < Math.max(d1.size, d2.size)) {
+	      // Compute sum of transferred kinetic energies along axis joining two centers
+	      const newV = {
+		x: (d1.weight*d1.sx + d2.weight*d2.sx)/(d1.weight+d2.weight),
+		y: (d1.weight*d1.sy + d2.weight*d2.sy)/(d1.weight+d2.weight)
+	      };
+	      const unitD = {x: (d2.x-d1.x)/dist, y: (d2.y-d1.y)/dist};
+	      const v1 = (newV.x-d1.sx)*unitD.x + (newV.y-d1.sy)*unitD.y;
+	      const v2 = (newV.x-d2.sx)*unitD.x + (newV.y-d2.sy)*unitD.y;
+	      const ke = d1.weight*v1*v1 + d2.weight*v2*v2;
+	      // Merge
 	      d1.x = (d1.weight*d1.x + d2.weight*d2.x)/(d1.weight+d2.weight);
 	      d1.y = (d1.weight*d1.y + d2.weight*d2.y)/(d1.weight+d2.weight);
-	      d1.sx = (d1.weight*d1.sx + d2.weight*d2.sx)/(d1.weight+d2.weight);
-	      d1.sy = (d1.weight*d1.sy + d2.weight*d2.sy)/(d1.weight+d2.weight);
+	      d1.sx = newV.x;
+	      d1.sy = newV.y;
 	      d1.color = d1.weight > d2.weight ? d1.color : d2.color;
 	      d1.weight = d1.weight + d2.weight;
 	      d1.size = sizeScale*Math.pow(d1.weight, 1/3);
 	      dots[id2] = null;
-	      if (breakDotMaybe(id1)) break;
+	      // Break, maybe?
+	      if (breakDotMaybe(id1, ke)) break;
 	    } else {
 	      let vx = (d1.x-d2.x)/dist;
 	      let vy = (d1.y-d2.y)/dist;
@@ -317,10 +330,10 @@
 	}
       }
       dots = dots.filter(d => (d != null));
-      if (maxDot) {
-	maxDot.sx += (w/2 - maxDot.x)/10000;
-	maxDot.sy += (h/2 - maxDot.y)/10000;
-      }
+      // if (maxDot) {
+      // 	maxDot.sx += (w/2 - maxDot.x)/10000;
+      // 	maxDot.sy += (h/2 - maxDot.y)/10000;
+      // }
       for (let d of dots) {
 	if (d.age >= growthTime) {
 	  d.x += .01*d.sx/dotSteps;
