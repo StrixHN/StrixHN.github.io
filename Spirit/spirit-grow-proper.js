@@ -35,6 +35,7 @@
   let w, h, maxSize;
 
   let init = () => {
+    DotAudio.start();
     w = window.innerWidth;
     h = window.innerHeight;
     canvas = document.createElement('canvas');
@@ -117,16 +118,19 @@
     if (x < 0 || x >= w || y < 0 || y >= h) return;
     // let rgb = [1,2,3].map(x => Math.floor(32+96*Math.random()));
     // rgb[Math.floor(1+2*Math.random())] += 100;
-    dots.push({
+    let d = {
       x: x,
       y: y,
       sx: 0,
       sy: 0,
+      f: [0, 0],
       age: 0,
       size: 0,
       weight: 0,
       color: randomColor()
-    });
+    };
+    d.synth = new DotAudio(d);
+    dots.push(d);
   };
 
   const breakDotMaybe = (i, energy) => {
@@ -199,6 +203,13 @@
       d.sy += 20*d.y;
       d.x += od.x;
       d.y += od.y;
+      d.f = [0, 0];
+      if (od.synth) {
+	d.synth = od.synth;
+	od.synth = null;
+      } else {
+	d.synth = new DotAudio(d);
+      }
       dots.push(d);
     }
     console.log(nd);
@@ -291,7 +302,7 @@
 	    maxWeight = d1.weight;
 	    maxDot = d1;
 	  }
-	  let f = [0, 0];
+	  d1.f = [0, 0];
 	  for (let id2=0; id2<nbDots; id2++) {
 	    let d2 = dots[id2];
 	    if (id1 == id2 || !d2) continue;
@@ -321,12 +332,12 @@
 	      let vx = (d1.x-d2.x)/dist;
 	      let vy = (d1.y-d2.y)/dist;
 	      let factor = d2.weight*attraction/(dist*dist);
-	      f[0] += factor*vx;
-	      f[1] += factor*vy;
+	      d1.f[0] += factor*vx;
+	      d1.f[1] += factor*vy;
 	    }
 	  }
-	  d1.sx -= f[0]/d1.weight;
-	  d1.sy -= f[1]/d1.weight;
+	  d1.sx -= d1.f[0]/d1.weight;
+	  d1.sy -= d1.f[1]/d1.weight;
 	}
       }
       dots = dots.filter(d => (d != null));
@@ -365,9 +376,10 @@
 	context2.fill();
       }
     }
+    DotAudio.updateAll();
     
     step++;
-    if (step % 10 == 0) {
+    if (step % 15 == 0) {
       // context.globalAlpha = .1;
       context.globalAlpha = 1;
       context.globalCompositeOperation = 'multiply';
@@ -375,7 +387,6 @@
       context.fillRect(0, 0, w, h);
       context.globalCompositeOperation = 'source-over';
     }
-
     requestAnimationFrame(run);
 
   };
