@@ -325,6 +325,7 @@
 	      d1.color = d1.weight > d2.weight ? d1.color : d2.color;
 	      d1.weight = d1.weight + d2.weight;
 	      d1.size = sizeScale*Math.pow(d1.weight, 1/3);
+	      d2.synth.kill();
 	      dots[id2] = null;
 	      // Break, maybe?
 	      if (breakDotMaybe(id1, ke)) break;

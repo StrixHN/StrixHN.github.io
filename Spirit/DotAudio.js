@@ -25,9 +25,13 @@ class DotAudio {
       channelCount: 1,
       gain: 0
     });
+    this.panner = new StereoPannerNode(DotAudio.ac, {
+      pan: 0
+    });
     this.oscillator.connect(this.filter);
     this.filter.connect(this.gain);
-    this.gain.connect(DotAudio.ac.destination);
+    this.gain.connect(this.panner);
+    this.panner.connect(DotAudio.ac.destination);
     this.oscillator.start();
     DotAudio.allSynths.push(this);
   }
@@ -44,14 +48,21 @@ class DotAudio {
 	DotAudio.removeSynth(this);
       }
     } else {
-      // Frequency
-      let f = 27.5*Math.pow(2, (88-Math.round(this.dot.weight))/12);
+      let f = 27.5*Math.pow(2, (76-Math.round(this.dot.weight/1.4))/12);
+      if (f<27.5) f = 27.5;
+      let ff = f*(1+Math.sqrt(this.dot.f[0]*this.dot.f[0] + this.dot.f[1]*this.dot.f[1]));
+      if (ff<f) ff = f;
+      if (ff > 20000) ff = 20000;
+      let g = .00001*Math.sqrt(Math.pow(this.dot.weight, 1.5)*(this.dot.sx*this.dot.sx + this.dot.sy*this.dot.sy));
+      if (g < .001) g = .001;
+      if (g > .5) g = .5;
       this.oscillator.frequency.value = f;
       // Timbre
-      this.filter.frequency.value = f*(1+Math.sqrt(this.dot.f[0]*this.dot.f[0] + this.dot.f[1]*this.dot.f[1])/1000);
+      this.filter.frequency.value = ff;
       // Amplitude
-      this.gain.gain.value = .0001*Math.sqrt(this.dot.sx*this.dot.sx + this.dot.sy*this.dot.sy)*this.dot.weight/10;
+      this.gain.gain.value = g;
       // console.log(this.oscillator.frequency.value, this.filter.frequency.value, this.gain.gain.value);
+      this.panner.pan.value = (this.dot.x-window.innerWidth/2)/(2*window.innerWidth);
     }
   }
 
