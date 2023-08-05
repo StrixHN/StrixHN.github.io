@@ -14,9 +14,9 @@
   const growthTime = 30;
   const activeAge = 100;
   
-  let segmentsPercircle = 100;
+  let segmentsPercircle = 160;
   let angleIncrement = 2*Math.PI/segmentsPercircle;
-  let sizeMultiplier = .99;
+  let sizeMultiplier = .995;
 
   let busy = [];
   const busySquareSize = 8;
@@ -26,6 +26,25 @@
   let spiralsPerSecond = 8;
   
   let startTime;
+
+  let lastT = 0;
+  let neededSpiralsAcc = 0;
+  let neededSpirals = () => {
+    let spiralsPerSecond = 0;
+    let t = (Date.now()-startTime)/1000;
+    if (t < 30) {
+      spiralsPerSecond = 4*(30-t)/30;
+    } else if (t < 40) {
+      spiralsPerSecond = 0;
+    }else if (t < 120) {
+      spiralsPerSecond = 6*(t-30)/120;
+    } else {
+      spiralsPerSecond = 6;
+    }
+    neededSpiralsAcc += (t-lastT)*spiralsPerSecond;
+    lastT = t;
+    return neededSpiralsAcc;
+  };
 
   let startPoints = [];
   let growingSpirals = [];
@@ -223,7 +242,7 @@
   let run = () => {
     let time = (Date.now() - startTime) / 1000;
     
-    if (dots.length < maxNbDots && time * spiralsPerSecond > nbSpirals) addSpiral();
+    if (dots.length < maxNbDots && neededSpirals() > nbSpirals) addSpiral();
 
     let newGS = [];
     for (let s of growingSpirals) {
@@ -238,6 +257,8 @@
 	    angle: s.angle % (2*Math.PI),
 	    direction: s.angleInc > 0 ? -1 : 1,
 	  });
+	  if (startPoints.length > 80)
+	    startPoints.splice(0, startPoints.length-50);
 	}
 	busy[Math.floor(s.x/busySquareSize), Math.floor(s.y/busySquareSize)]++;
       }
