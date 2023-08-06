@@ -16,15 +16,13 @@
   
   let segmentsPercircle = 160;
   let angleIncrement = 2*Math.PI/segmentsPercircle;
-  let sizeMultiplier = .995;
+  let sizeMultiplier = .997;
 
   let busy = [];
-  const busySquareSize = 8;
+  const busySquareSize = 64;
 
   let dots = [];
-  
-  let spiralsPerSecond = 8;
-  
+    
   let startTime;
 
   let lastT = 0;
@@ -55,6 +53,7 @@
 
   let init = () => {
     DotAudio.start();
+    SpiralAudio.start();
     w = window.innerWidth;
     h = window.innerHeight;
     canvas = document.createElement('canvas');
@@ -65,12 +64,16 @@
     canvas.height = h;
     canvas2.width = w;
     canvas2.height = h;
+    canvas.style.width = w+'px';
+    canvas.style.height = h+'px';
+    canvas2.style.width = w+'px';
+    canvas2.style.height = h+'px';
     let maxR = Math.min(w, h)/4;
     maxSize = 2*Math.PI*maxR/segmentsPercircle;
     let busyW = Math.ceil(w/busySquareSize);
     let busyH = Math.ceil(h/busySquareSize);
-    for (let i=0; i<busyW; i++) {
-      busy[i] = new Array(busyH);
+    for (let i=0; i<=busyW; i++) {
+      busy[i] = new Array(busyH+1);
       busy[i].fill(0);
     }
     // context.globalAlpha = .6;
@@ -92,7 +95,7 @@
   let addSpiral = () => {
     if (!startPoints.length) return;
     let candidateSpirals = [];
-    for (let i=0; i<Math.min(1000, startPoints.length); i++) {
+    for (let i=0; i<startPoints.length; i++) {
       let sp = startPoints[i];
       let spiral = {
 	index: i,
@@ -104,25 +107,33 @@
 	angleInc: sp.direction*(.95+.1*Math.random())*angleIncrement,
 	size: (.4 + .6*Math.random())*maxSize,
 	sizeMult: (.97+.03*Math.random())*sizeMultiplier,
-	branch1: Math.round(.1+.3*Math.random()*segmentsPercircle),
+	branch1: Math.round(.2+.3*Math.random()*segmentsPercircle),
 	branch2: Math.round(.5+.3*Math.random()*segmentsPercircle)
       };
       let size = spiral.size,
 	  x = spiral.x,
 	  y = spiral.y;
-      for (let i=0; i < 4*segmentsPercircle && size > .1; i++, size *= spiral.sizeMult) {
+      for (let i=0; i < 4*segmentsPercircle && size > .05; i++, size *= spiral.sizeMult) {
 	if (x > 0 && y > 0 && x < w && y < h) {
-	  spiral.busy += busy[Math.floor(x/busySquareSize), Math.floor(y/busySquareSize)];
+	  spiral.busy += busy[Math.floor(x/busySquareSize)][Math.floor(y/busySquareSize)];
 	} else {
-	  spiral.busy += 10000;
+	  spiral.busy += 100;
 	}
 	x += spiral.size*Math.cos(spiral.angle);
 	y += spiral.size*Math.sin(spiral.angle);
+	spiral.step++;
       }
       candidateSpirals.push(spiral);
     }
+    for (let cs of candidateSpirals) {
+      cs.busy /= Math.pow(cs.step, 1.5);
+    }
     let selected = candidateSpirals.reduce((a,b) => a.busy < b.busy ? a : b, candidateSpirals[0]);
+    console.log(`Selected: ${selected.busy} / first: ${candidateSpirals[0].busy}`);
     startPoints.splice(selected.index, 1);
+    selected.total = selected.step;
+    selected.step = 0;
+    selected.synth = new SpiralAudio(selected);
     growingSpirals.push(selected);
     nbSpirals++;
   };
@@ -257,16 +268,16 @@
 	    angle: s.angle % (2*Math.PI),
 	    direction: s.angleInc > 0 ? -1 : 1,
 	  });
-	  if (startPoints.length > 80)
-	    startPoints.splice(0, startPoints.length-50);
+	  if (startPoints.length > 40)
+	    startPoints.splice(0, startPoints.length-20);
 	}
-	busy[Math.floor(s.x/busySquareSize), Math.floor(s.y/busySquareSize)]++;
+	busy[Math.floor(s.x/busySquareSize)][Math.floor(s.y/busySquareSize)] += .01;
       }
       let a = s.angle - .3 + Math.random();
       let newX = s.x + s.size*Math.cos(a);
       let newY = s.y + s.size*Math.sin(a);
       
-      context.lineWidth = (.6+.4*Math.random())*Math.sqrt(s.size); //s.size/2;
+      context.lineWidth = (1.5+.4*Math.random())*Math.sqrt(s.size); //s.size/2;
       context.globalAlpha = .5+.5*Math.random();
       context.strokeStyle = '#ccf';
       context.beginPath();
@@ -279,9 +290,10 @@
       s.y = newY;
       s.angle = s.angle + s.angleInc;
       s.size *= s.sizeMult;
-      if (s.step < 4*segmentsPercircle && s.size > .1) {
+      if (s.step < 4*segmentsPercircle && s.size > .05) {
 	newGS.push(s);
       } else {
+	s.synth.kill();
 	addDot(s.x, s.y);
       }
     }
@@ -399,6 +411,7 @@
       }
     }
     DotAudio.updateAll();
+    SpiralAudio.updateAll();
     
     step++;
     if (step % 15 == 0) {

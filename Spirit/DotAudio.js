@@ -45,6 +45,7 @@ class DotAudio {
 	this.oscillator.disconnect();
 	this.filter.disconnect();
 	this.gain.disconnect();
+	this.panner.disconnect();
 	DotAudio.removeSynth(this);
       }
     } else {
