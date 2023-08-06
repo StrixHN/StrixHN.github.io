@@ -95,6 +95,10 @@
   let addSpiral = () => {
     if (!startPoints.length) return;
     let candidateSpirals = [];
+    let maxBusy = busy.reduce((a,x) => {
+      let b = x.reduce((a2,x2) => Math.max(a2,x2), 0);
+      return Math.max(a, b);
+    }, 0);
     for (let i=0; i<startPoints.length; i++) {
       let sp = startPoints[i];
       let spiral = {
@@ -117,7 +121,7 @@
 	if (x > 0 && y > 0 && x < w && y < h) {
 	  spiral.busy += busy[Math.floor(x/busySquareSize)][Math.floor(y/busySquareSize)];
 	} else {
-	  spiral.busy += 100;
+	  spiral.busy += maxBusy+1;
 	}
 	x += spiral.size*Math.cos(spiral.angle);
 	y += spiral.size*Math.sin(spiral.angle);
@@ -129,7 +133,8 @@
       cs.busy /= Math.pow(cs.step, 1.5);
     }
     let selected = candidateSpirals.reduce((a,b) => a.busy < b.busy ? a : b, candidateSpirals[0]);
-    console.log(`Selected: ${selected.busy} / first: ${candidateSpirals[0].busy}`);
+    // let selected = candidateSpirals[Math.floor(Math.random()*candidateSpirals.length)];
+    // console.log(`Selected: ${selected.busy} / first: ${candidateSpirals[0].busy}`);
     startPoints.splice(selected.index, 1);
     selected.total = selected.step;
     selected.step = 0;
@@ -261,17 +266,17 @@
 	  && s.y > 0
 	  && s.x < w
 	  && s.y < h) {
-	if (s.step == s.branch1 || s.step == s.branch2) {
-	  startPoints.push({
-	    x: s.x,
-	    y: s.y,
-	    angle: s.angle % (2*Math.PI),
-	    direction: s.angleInc > 0 ? -1 : 1,
-	  });
-	  if (startPoints.length > 40)
-	    startPoints.splice(0, startPoints.length-20);
-	}
 	busy[Math.floor(s.x/busySquareSize)][Math.floor(s.y/busySquareSize)] += .01;
+      }
+      if (s.step == s.branch1 || s.step == s.branch2) {
+	startPoints.push({
+	  x: s.x,
+	  y: s.y,
+	  angle: s.angle % (2*Math.PI),
+	  direction: s.angleInc > 0 ? -1 : 1,
+	});
+	if (startPoints.length > 40)
+	  startPoints.splice(0, startPoints.length-20);
       }
       let a = s.angle - .3 + Math.random();
       let newX = s.x + s.size*Math.cos(a);
@@ -279,7 +284,7 @@
       
       context.lineWidth = (1.5+.4*Math.random())*Math.sqrt(s.size); //s.size/2;
       context.globalAlpha = .5+.5*Math.random();
-      context.strokeStyle = '#ccf';
+      context.strokeStyle = '#cbe';
       context.beginPath();
       context.moveTo(s.x, s.y);
       context.lineTo(newX, newY);
