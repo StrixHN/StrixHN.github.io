@@ -5,7 +5,7 @@ const s = 1; // ms
 const r = 100; // ms
 const maxAmp = .9;
 
-let ac, ding;
+let ac, ding, clap;
 
 class SineGenerator {
 
@@ -48,6 +48,18 @@ class TriangleGenerator {
 
 }
 
+const makeClap = (sr) => {
+  clap = new AudioBuffer({
+    length: 100,
+    numberOfChannels: 1,
+    sampleRate: sr
+  });
+  let data = clap.getChannelData(0);
+  data.fill(0);
+  data[0] = 1;
+  data[1] = -1;
+};
+
 const makeDing = (sr, generator) => {
   let amp = 0;
   let attackSamples = Math.round(a * sr / 1000);
@@ -84,10 +96,11 @@ let startTime = 0;
 const beat = 60/71.5;
 
 const timeline = [
-  {t:4*beat, p:.05},
-  {t:8*beat, p:.005},
-  {t:10*beat, p:.03},
-  {t:12*beat, p:.004}
+  {t:4*beat, p:.002},
+  {t:8*beat, p:.05},
+  {t:11*beat, p:.005},
+  {t:12*beat, p:.03},
+  {t:16*beat, p:.003}
 ];
 
 const prob = (t) => {
@@ -119,7 +132,7 @@ const chord = (t) => {
 
 };
 
-const stereoWidth = .7;
+const stereoWidth = .5;
 
 
 const randSign = () => {
@@ -139,7 +152,7 @@ const randBm = (stretch) => {
 };
 
 const playDing = (time, amp, speed, speedRand) => {
-  if (Math.random() > .7) speed *= 7/6;
+  if (Math.random() > .7) speed *= 32/27;
   let n = new AudioBufferSourceNode(ac, {
     buffer: ding,
     playbackRate: speed*(1-speedRand+2*speedRand*Math.random())
@@ -165,7 +178,12 @@ const playDing = (time, amp, speed, speedRand) => {
 const init = () => {
   ac = new AudioContext();
   makeDing(ac.sampleRate, new TriangleGenerator(ac.sampleRate, f));
+  makeClap(ac.sampleRate);
   startTime = Date.now();
+  let n = new AudioBufferSourceNode(ac, { buffer: clap });
+  n.connect(ac.destination);
+  n.addEventListener('ended', () => { n.disconnect(); });
+  n.start();
 };
 
 
@@ -174,7 +192,7 @@ const run = () => {
   let p = prob(t);
   for (let i=0; i<1000; i++) {
     if (Math.random() < p) {
-      playDing(ac.currentTime+.1+.1*Math.random(), .005, 1, .03);
+      playDing(ac.currentTime+.1+.1*Math.random(), .03, 1, .03);
     }
   }
   requestAnimationFrame(run);

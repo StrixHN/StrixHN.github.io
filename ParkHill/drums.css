@@ -1,0 +1,131 @@
+
+* {
+    box-sizing: border-box;
+    vertical-align: top;
+}
+
+body {
+    font-size: 14px;
+    font-family: sans serif;
+    line-height: 1.5em;
+    background-color: #333;
+    color: #eee;
+}
+
+body {
+    padding: 30px;
+}
+
+div.patternButton {
+    display: inline-block;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    color: white;
+    background-color: #555;
+    margin: 4px;
+}
+
+div.patternButton.selected {
+    cursor: default;
+    background-color: #44a;
+}
+
+div.cell {
+    display: inline-block;
+    position: relative;
+    width: 32px;
+    height: 32px;
+    margin: 0px 2px 2px 0px;
+}
+
+div.cell div.hline {
+    position: absolute;
+    width: 10px;
+    height: 2px;
+    background-color: #ddd;
+}
+
+div.cell div.hline.up {
+    background-color: #aaf;
+}
+
+div.cell div.hline.down {
+    background-color: #dba;
+}
+
+div.cell div.vline {
+    position: absolute;
+    width: 2px;
+    left: 15px;
+    background-color: #ddd;
+}
+
+div.beatDiv {
+    display: inline-block;
+    margin-right: 2px;
+    padding: 4px;
+    width: 270px;
+    color: white;
+    background-color: #555;
+    text-align: center;
+}
+
+div.subBeatDiv {
+    display: inline-block;
+    margin-right: 2px;
+    padding: 2px;
+    width: 32px;
+    color: #ccc;
+    background-color: #444;
+    text-align: center;
+}
+
+div.beatDiv.active, div.subBeatDiv.active {
+    background-color: #44a;
+}
+
+div.patternList {
+    margin-bottom: 20px;
+}
+
+div.beatMarks {
+    padding-left: 180px;
+}
+
+div.subBeatMarks {
+    padding-left: 180px;
+    margin-bottom: 8px;
+}
+
+div.drumGridCategory {
+    margin-bottom: 8px;
+}
+
+div.categoryTitle {
+    display: inline-block;
+    width: 90px;
+    padding-top: 10px;
+}
+
+div.sampleTitles {
+    display: inline-block;
+    width: 90px;
+}
+
+div.sTitle {
+    display: inline-block;
+    width: 100px;
+    height: 32px;
+    margin-bottom: 2px;
+    padding-top: 6px;
+}
+
+div.sampleTracks {
+    display: inline-block;
+    width: 1088px;
+}
+
+div.sTrack {
+    display: inline-block;
+}
