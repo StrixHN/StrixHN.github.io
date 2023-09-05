@@ -1,3 +1,4 @@
+let ac;
 
 const categories = [
   {
@@ -10,12 +11,12 @@ const categories = [
   {
     name: 'Pop',
     samples: [
-      { name: 'Low 1', sample: 'crackle_low_1.wav'},
-      { name: 'Low 2', sample: 'crackle_low_2.wav'},
-      { name: 'Low 3', sample: 'crackle_low_3.wav'},
-      { name: 'High 1', sample: 'crackle_high_1.wav'},
-      { name: 'High 2', sample: 'crackle_high_2.wav'},
-      { name: 'High 3', sample: 'crackle_high_3.wav'}
+      { name: 'Low 1', sample: 'pop_low_1.wav'},
+      { name: 'Low 2', sample: 'pop_low_2.wav'},
+      { name: 'Low 3', sample: 'pop_low_3.wav'},
+      { name: 'High 1', sample: 'pop_high_1.wav'},
+      { name: 'High 2', sample: 'pop_high_2.wav'},
+      { name: 'High 3', sample: 'pop_high_3.wav'}
     ]
   },
   {
@@ -35,11 +36,18 @@ const categories = [
       { name: 'Beat', sample: 'noise_beat.wav'},
       { name: '1/2', sample: 'noise_half.wav'},
       { name: '1/4', sample: 'noise_quarter.wav'},
-      { name: '1/8', sample: 'noise_eigth.wav'},
+      { name: '1/8', sample: 'noise_eighth.wav'},
       { name: '1/16', sample: 'noise_sixteenth.wav'}
     ]
   }
 ];
+
+let allSamples = [];
+for (let c of categories) {
+  for (let s of c.samples) {
+    allSamples.push(s);
+  }
+}
 
 let patterns = [];
 
@@ -110,6 +118,85 @@ function selectPattern (num) {
 }
 
 
-window.addEventListener('DOMContentLoaded', () => {
+function load() {
+  ac = new AudioContext();
+  return Promise.all(
+    allSamples.map(
+      s => new Promise(
+	(resolve, reject) =>
+	fetch(`samples/${s.sample}`)
+	  .then(response => response.arrayBuffer())
+	  .then(buf => ac.decodeAudioData(buf))
+	  .then((audioBuf) => {
+	    s.buffer = audioBuf;
+	    resolve();
+	  })
+      )
+    )
+  );
+}
+
+let beat, subBeat;
+let subBeatDuration = (60/71.5)/8;
+let nextTime = 0;
+
+function init() {
   selectPattern(0);
+  ac.resume();
+  nextTime = ac.currentTime+.05;
+  beat = subBeat = 0;
+}
+
+function run() {
+  let index = 8*beat + subBeat;
+  patterns[activePattern].forEach((c,i) => {
+    if (c[index].active) {
+      let n = new AudioBufferSourceNode(ac, {
+	buffer: allSamples[i].buffer,
+	playbackSpeed: Math.pow(2, c[index].semitoneShift/12)
+      });
+      let g = new GainNode(ac, {
+	gain: dbToAmp(c[index].dbGain)
+      });
+      n.connect(g);
+      g.connect(ac.destination);
+      n.addEventListener('ended', () => {
+	n.disconnect();
+	g.disconnect();
+      });
+      n.start(nextTime);
+    }
+  });
+  for (let d of beatDivs) {
+    d.classList.remove('active');
+  }
+  beatDivs[beat].classList.add('active');
+  for (let d of subBeatDivs) {
+    d.classList.remove('active');
+  }
+  subBeatDivs[8*beat + subBeat].classList.add('active');
+  nextTime += subBeatDuration;
+  subBeat++;
+  if (subBeat == 8) {
+    subBeat = 0;
+    beat++;
+  }
+  if (beat == 4) {
+    beat = 0;
+  }
+  setTimeout(run, 1000*(nextTime-ac.currentTime-.05));
+}
+
+
+window.addEventListener('DOMContentLoaded', () => {
+  load().then(() => {
+    let button = document.createElement('button');
+    button.innerHTML = 'Play';
+    document.body.appendChild(button);
+    button.addEventListener('click', () => {
+      document.body.removeChild(button);
+      init();
+      run();
+    });
+  });
 });
