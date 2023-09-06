@@ -39,19 +39,27 @@ div.cell {
     margin: 0px 2px 2px 0px;
 }
 
-div.cell div.hline {
+div.cell div.tline {
     position: absolute;
-    width: 10px;
+    width: 6px;
+    height: 2px;
+    bottom: 0px;
+    background-color: #ccc;
+}
+
+div.cell div.tline.up {
+    background-color: #88f;
+}
+
+div.cell div.tline.down {
+    background-color: #da8;
+}
+
+div.cell div.pline {
+    position: absolute;
+    width: 2px;
     height: 2px;
     background-color: #ddd;
-}
-
-div.cell div.hline.up {
-    background-color: #aaf;
-}
-
-div.cell div.hline.down {
-    background-color: #dba;
 }
 
 div.cell div.vline {

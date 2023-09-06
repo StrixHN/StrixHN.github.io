@@ -49,9 +49,10 @@ for (let c of categories) {
   }
 }
 
+
 let patterns = [];
 
-if (false && localStorage.getItem('drumPatterns')) {
+if (localStorage.getItem('drumPatterns')) {
   patterns = JSON.parse(localStorage.getItem('drumPatterns'));
 } else {
   for (let i=0; i<32; i++) {
@@ -63,7 +64,8 @@ if (false && localStorage.getItem('drumPatterns')) {
 	  dat.push({
 	    active: false,
 	    dbGain: -6,
-	    semitoneShift: 0
+	    semitoneShift: 0,
+	    pan: 0
 	  });
 	}
 	pat.push(dat);
@@ -73,7 +75,36 @@ if (false && localStorage.getItem('drumPatterns')) {
   }
 }
 
+let saveTimer = null;
+
+function throttledSave() {
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    saveTimer = null;
+    localStorage.setItem(
+      'drumPatterns',
+      JSON.stringify(
+	patterns.map(p =>
+	  p.map(s =>
+	    s.map(d => {
+	      return {
+		active: d.active,
+		dbGain: d.dbGain,
+		semitoneShift: d.semitoneShift,
+		pan: d.pan
+	      };
+	    })
+	  )
+	)
+      )
+    );
+  }, 200);
+}
+
+
+
 let activePattern = 0;
+let copyTo = -1;
 
 let beatDivs = [];
 let subBeatDivs = [];
@@ -86,11 +117,14 @@ function makePage () {
   document.body.replaceChildren(
     makeDiv('drumPage', [
       makeDiv('patternList',
-	      patterns.map((p,i) => makeDiv('patternButton', i+1, (el) => {
+	      patterns.map((p,i) => makeDiv('patternButton', i+5, (el) => {
 		if (i == activePattern) {
 		  el.classList.add('selected');
 		} else {
-		  el.addEventListener('click', () => selectPattern(i));
+		  el.addEventListener('click', (e) => {
+		    e.preventDefault();
+		    selectPattern(i);
+		  });
 		}
 	      }))),
       makeDiv('beatMarks', beatDivs),
@@ -101,27 +135,103 @@ function makePage () {
 		makeDiv('sampleTitles', cat.samples.map( s => makeDiv('sTitle', s.name) )),
 		makeDiv('sampleTracks', cat.samples.map( s =>
 		  makeDiv('sTrack', patterns[activePattern][sNum++].map( d => {
-		    let c = new Cell(d);
+		    let c = new Cell(d, throttledSave);
 		    return c.build();
 		  }))
 		))
 	      ], (el) => {
 		el.height = ((Cell.size+2)*cat.samples.length)+'px';
-	      })))
+	      }))),
+      makeDiv('bottomButtons', [
+	makeDiv('patternButton', 'Export', (el) => {
+	  el.addEventListener('click', exportAudio);
+	})
+      ])
     ])
   );
+  document.querySelector('div.patternList').appendChild(makeDiv('patternButton', 'Copy from...', (el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      copyTo = activePattern;
+    });
+  }));
+  document.querySelector('div.patternList').appendChild(makeDiv('patternButton', 'Clear', (el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      clearPattern(activePattern);
+    });
+  }));
 }
 
-function selectPattern (num) {
-  activePattern = num;
-  makePage();
+
+function clearPattern(num) {
+  let p = patterns[num];
+  for (let s of p) {
+    for (let d of s) {
+      d.active = false;
+      d.dbGain = -6;
+      d.semitoneShift = 0;
+      d.pan = 0;
+      d.cell.update();
+    }
+  }
+  throttledSave();
 }
+
+
+function selectPattern (num) {
+  if (copyTo >= 0) {
+    let dst = patterns[copyTo];
+    let src = patterns[num];
+    src.forEach((s, i) => {
+      s.forEach((srcD, j) => {
+	let dstD = dst[i][j];
+	dstD.active = srcD.active;
+	dstD.dbGain = srcD.dbGain;
+	dstD.semitoneShift = srcD.semitoneShift;
+	dstD.pan = srcD.pan;
+	dstD.cell.update();
+      });
+    });
+    throttledSave();
+    copyTo = -1;
+  } else {
+    activePattern = num;
+    makePage();
+  }
+}
+
+const beatDuration = 60/71.5;
+const barDuration = 4*beatDuration;
+const subBeatDuration = beatDuration/8;
+
+const bassBuffers = [];
+
+function splitBassBuffer (buf) {
+  const barSamples = Math.round(barDuration * buf.sampleRate);
+  for (let pos = 0; pos < buf.length-barSamples; pos += barSamples) {
+    let bb = new AudioBuffer({
+      sampleRate: buf.sampleRate,
+      numberOfChannels: buf.numberOfChannels,
+      length: barSamples
+    });
+    for (let c=0; c<buf.numberOfChannels; c++) {
+      let src = buf.getChannelData(c);
+      let dst = bb.getChannelData(c);
+      for (let i=0; i<barSamples; i++) {
+	dst[i] = src[pos+i];
+      }
+    }
+    bassBuffers.push(bb);
+  }
+}
+
 
 
 function load() {
-  ac = new AudioContext();
-  return Promise.all(
-    allSamples.map(
+  ac = new AudioContext({sampleRate: 48000});
+  return Promise.all([
+    ...allSamples.map(
       s => new Promise(
 	(resolve, reject) =>
 	fetch(`samples/${s.sample}`)
@@ -132,12 +242,21 @@ function load() {
 	    resolve();
 	  })
       )
+    ),
+    new Promise((resolve, reject) =>
+      fetch('samples/bass.mp3')
+	.then(response => response.arrayBuffer())
+	.then(buf => ac.decodeAudioData(buf))
+	.then((audioBuf) => {
+	  splitBassBuffer(audioBuf);
+	  resolve();
+	})
     )
-  );
+  ]);
 }
 
+
 let beat, subBeat;
-let subBeatDuration = (60/71.5)/8;
 let nextTime = 0;
 
 function init() {
@@ -149,20 +268,38 @@ function init() {
 
 function run() {
   let index = 8*beat + subBeat;
+
+  if (index==0 && bassBuffers[activePattern]) {
+    let n = new AudioBufferSourceNode(ac, { buffer: bassBuffers[activePattern] });
+    let g = new GainNode(ac, { gain: dbToAmp(-12) });
+    n.connect(g);
+    g.connect(ac.destination);
+    n.addEventListener('ended', () => {
+	n.disconnect();
+      g.disconnect();
+    });
+    n.start(nextTime);
+  }
+  
   patterns[activePattern].forEach((c,i) => {
     if (c[index].active) {
       let n = new AudioBufferSourceNode(ac, {
 	buffer: allSamples[i].buffer,
-	playbackSpeed: Math.pow(2, c[index].semitoneShift/12)
+	playbackRate: Math.pow(2, c[index].semitoneShift/12)
       });
       let g = new GainNode(ac, {
 	gain: dbToAmp(c[index].dbGain)
       });
+      let p = new StereoPannerNode(ac, {
+	pan: c[index].pan
+      });
       n.connect(g);
-      g.connect(ac.destination);
+      g.connect(p);
+      p.connect(ac.destination);
       n.addEventListener('ended', () => {
 	n.disconnect();
 	g.disconnect();
+	p.disconnect();
       });
       n.start(nextTime);
     }
@@ -200,3 +337,57 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+
+function exportAudio () {
+  const totalDuration = 32*barDuration;
+  const sr = 48000;
+  let oac = new OfflineAudioContext({
+    nbChannels: 2,
+    sampleRate: sr,
+    length: sr*totalDuration
+  });
+  patterns.forEach((pattern, pNum) => {
+    let t0 = pNum*barDuration;
+    pattern.forEach((sampleLine, sNum) => {
+      sampleLine.forEach((cell, cNum) => {
+	if (cell.active) {
+	  let t = t0 + cNum*subBeatDuration;
+	  let n = new AudioBufferSourceNode(oac, {
+	    buffer: allSamples[sNum].buffer,
+	    playbackRate: Math.pow(2, cell.semitoneShift/12)
+	  });
+	  let g = new GainNode(oac, {
+	    gain: dbToAmp(cell.dbGain)
+	  });
+	  let p = new StereoPannerNode(oac, {
+	    pan: cell.pan
+	  });
+	  n.connect(g);
+	  g.connect(p);
+	  p.connect(oac.destination);
+	  n.start(t);
+	}
+      });
+    });
+  });
+  oac.startRendering().then((buffer) => {
+    let max = 0;
+    for (let c=0; c<buffer.numberOfChannels; c++) {
+      let data = buffer.getChannelData(c);
+      for (let v of data) {
+	if (Math.abs(v) > max) max = Math.abs(v);
+      }
+    }
+    console.log(max);
+    let amp = .95/max;
+    for (let c=0; c<buffer.numberOfChannels; c++) {
+      let data = buffer.getChannelData(c);
+      for (let i=0; i<buffer.length; i++) {
+	data[i] *= amp;
+      }
+    }
+    new WaveWriter(buffer).saveWaveFile('rendered.wav');
+  });
+}
+

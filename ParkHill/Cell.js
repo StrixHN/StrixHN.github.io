@@ -2,10 +2,12 @@
 class Cell {
 
   
-  constructor (data) {
+  constructor (data, changeCB) {
     this.element = null;
     this.active = false;
     this.data = data;
+    data.cell = this;
+    this.changeCB = changeCB ? changeCB : () => {};
   }
 
   
@@ -17,8 +19,11 @@ class Cell {
       makeDiv('vline', null, (e) => {
 	this.vLine = e;
       }),
-      makeDiv('hline', null, (e) => {
-	this.hLine = e;
+      makeDiv('pline', null, (e) => {
+	this.pLine = e;
+      }),
+      makeDiv('tline', null, (e) => {
+	this.tLine = e;
       })
     ]);
     
@@ -26,6 +31,7 @@ class Cell {
       ev.preventDefault();
       this.data.active = !this.data.active;
       this.update();
+      this.changeCB(this);
     });
     
     this.element.addEventListener('wheel', (ev) => {
@@ -34,12 +40,17 @@ class Cell {
       let delta = ev.deltaX + ev.deltaY;
       if (ev.ctrlKey) {
 	this.data.semitoneShift +=  delta > 0 ? -1 : 1;
+      } else if (ev.shiftKey) {
+	this.data.pan +=  delta > 0 ? -.05 : .05;
+	if (this.data.pan < -1) this.data.pan = -1;
+	if (this.data.pan > 1) this.data.pan = 1;
       } else {
 	this.data.dbGain +=  delta > 0 ? -1 : 1;
 	if (this.data.dbGain > 0) this.data.dbGain = 0;
 	if (this.data.dbGain < -60) this.data.dbGain = -60;
       }
       this.update();
+      this.changeCB(this);
     });
     this.update();
     return this.element;
@@ -51,21 +62,33 @@ class Cell {
     if (this.data.active) {
       this.element.style['background-color'] = '#585858';
       this.vLine.style.display = 'block';
-      this.hLine.style.display = 'block';
+      this.pLine.style.display = 'block';
+      this.tLine.style.display = 'block';
     } else {
       this.element.style['background-color'] = '#383838';
       this.vLine.style.display = 'none';
-      this.hLine.style.display = 'none';
+      this.pLine.style.display = 'none';
+      this.tLine.style.display = 'none';
     }
     let height = (this.data.dbGain-Cell.minGain)/(-Cell.minGain) * (Cell.size-2);
     this.vLine.style.height = height+'px';
     this.vLine.style.top = (Cell.size - height)+'px';
-    this.hLine.style.top = (Cell.size - height - 2)+'px';
-    this.hLine.style.left = (Cell.size/2 - 5 + this.data.semitoneShift)+'px';
-    this.hLine.classList.remove('up');
-    this.hLine.classList.remove('down');
-    if (this.data.semitoneShift < 0) this.hLine.classList.add('down');
-    if (this.data.semitoneShift > 0) this.hLine.classList.add('up');
+    this.pLine.style.top = (Cell.size - height)+'px';
+    
+    if (this.data.pan >= 0) {
+      this.pLine.style.width = (2 + this.data.pan*(Cell.size/2-1))+'px';
+      this.pLine.style.left = (Cell.size/2-1)+'px';
+    } else {
+      let w = - this.data.pan*(Cell.size/2-1);
+      this.pLine.style.width = (w + 2)+'px';
+      this.pLine.style.left = (Cell.size/2-1-w)+'px';
+    }
+    
+    this.tLine.style.left = (Cell.size/2 - 3 + this.data.semitoneShift)+'px';
+    this.tLine.classList.remove('up');
+    this.tLine.classList.remove('down');
+    if (this.data.semitoneShift < 0) this.tLine.classList.add('down');
+    if (this.data.semitoneShift > 0) this.tLine.classList.add('up');
   }
   
   
