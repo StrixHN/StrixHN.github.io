@@ -1,0 +1,13 @@
+
+* {
+    box-sizing: border-box;
+    vertical-align: top;
+}
+
+body {
+    font-size: 14px;
+    font-family: sans serif;
+    line-height: 1.5em;
+    background-color: #332;
+}
+
