@@ -4,11 +4,11 @@
   const zoneSize = 64;
   const dotSize = 2;
 
-  let onScreen, offScreen, onScreenContext, offScreenContext;
+  let onScreen, onScreenContext;
   
   const makeZones = () => {
     let colDots = [];
-    for (let color of ['#ff0000', '#00ff00', '#0000ff']) {
+    for (let color of ['#d00', '#0d0', '#00d']) {
       let scanvas = document.createElement('canvas');
       scanvas.width = 3;
       scanvas.height = 3;
@@ -45,44 +45,63 @@
     }
   };
 
-  let lastSeed = 0;
+  const permut = [];
+  const makePermutation = () => {
+    let oldPermut = permut.concat();
+    for (let i=0; i<zones.length; i++) {
+      permut[i] = i;
+    }
+    for (let i=0; i<zones.length-1; i++) {
+      let nbLeft = zones.length-i-1;
+      let pick = i+1+Math.floor(nbLeft*Math.random());
+      while (i<zones.length-3 && oldPermut[i] == permut[pick])
+	pick = i+1+Math.floor(nbLeft*Math.random());
+      let tmp = permut[i];
+      permut[i] = permut[pick];
+      permut[pick] = tmp;
+    }
+  };
+  
+  let count = 0;
   
   const fillCanvas = () => {
-    offScreenContext.globalCompositeOperation = 'source-over';
-    offScreenContext.fillStyle = '#222';
-    offScreenContext.fillRect(0, 0, offScreen.width, offScreen.height);
-    offScreenContext.globalCompositeOperation = 'lighter';
-    let seed = Math.floor(zones.length*Math.random());
-    while (seed == lastSeed)
-      seed = Math.floor(zones.length*Math.random());
-    lastSeed = seed;
-    for (let x=0; x<offScreen.width; x+=dotSize*zoneSize) {
-      for (let y=0; y<offScreen.height; y+=dotSize*zoneSize) {
-	offScreenContext.drawImage(zones[seed], x, y);
-	seed++;
-	if (seed == zones.length) seed = 0;
+    let mustDraw = (count % 3 == 0);
+    if (onScreen.width != window.innerWidth || onScreen.height != window.innerHeight) {
+      onScreen.width = window.innerWidth;
+      onScreen.height = window.innerHeight;
+      onScreen.style.width = window.innerWidth+'px';
+      onScreen.style.height = window.innerHeight+'px';
+      onScreenContext = onScreen.getContext('2d', {alpha:false});
+      mustDraw = true;
+    }
+    if (mustDraw) {
+      makePermutation();
+      onScreenContext.globalCompositeOperation = 'source-over';
+      onScreenContext.fillStyle = '#222';
+      onScreenContext.fillRect(0, 0, onScreen.width, onScreen.height);
+      onScreenContext.globalCompositeOperation = 'lighter';
+      let patch = 0;
+      for (let x=0; x<onScreen.width; x+=dotSize*zoneSize) {
+	for (let y=0; y<onScreen.height; y+=dotSize*zoneSize) {
+	  onScreenContext.drawImage(zones[permut[patch % permut.length]], x, y);
+	  patch++;
+	}
       }
     }
-    createImageBitmap(offScreen).then((bitmap) => {
-      onScreenContext.transferFromImageBitmap(bitmap);
-    });
+    count++;
+    requestAnimationFrame(fillCanvas);
   };
 
 
   window.addEventListener('DOMContentLoaded', () => {
     makeZones();
-    onScreen = document.body.querySelector('canvas');
+    onScreen = document.createElement('canvas');
     onScreen.style.position = 'absolute';
     onScreen.style.top = '0px';
     onScreen.style.left = '0px';
-    onScreen.width = window.innerWidth;
-    onScreen.height = window.innerHeight;
-    onScreen.style.width = window.innerWidth+'px';
-    onScreen.style.height = window.innerHeight+'px';
-    onScreenContext = onScreen.getContext('bitmaprenderer');
-    offScreen = new OffscreenCanvas(window.innerWidth, window.innerHeight);
-    offScreenContext = offScreen.getContext('2d', {alpha:false});
-    setInterval(fillCanvas, 1000/20);
+    onScreen.width = onScreen.height = 0;
+    document.body.appendChild(onScreen);
+    fillCanvas();
   });
 
   
