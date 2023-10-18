@@ -88,6 +88,7 @@ function loadAudio (urls, sampleRate) {
   let returnMap = null;
   if (typeof(urls) === 'string') {
     urls = [urls];
+    returnOne = true;
   }
   if (!Array.isArray(urls)) {
     returnMap = Object.keys(urls);
