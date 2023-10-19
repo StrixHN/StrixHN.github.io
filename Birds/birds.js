@@ -184,6 +184,10 @@ const makeReverbSelector = () => {
 };
 
 
+const minDist = 2;
+
+let holdingDiv, bgDrawing, markerDrawing, x, y, isOver = false;
+
 const makeDrawing = () => {
   let maxHeight = window.innerHeight-100;
   let maxWidth = window.innerWidth-40;
@@ -203,11 +207,11 @@ const makeDrawing = () => {
   let one = h/10;
   ctxt.beginPath();
   ctxt.fillStyle = '#fff';
-  ctxt.arc(h, h, 3*one, 0, Math.PI, true);
+  ctxt.arc(h, h, minDist*one, 0, Math.PI, true);
   ctxt.fill();
   ctxt.strokeStyle='#fff';
   ctxt.lineWidth = 1;
-  for (let c=4; c<10; c++) {
+  for (let c=minDist+1; c<10; c++) {
     ctxt.beginPath();
     ctxt.arc(h, h, c*one, 0, Math.PI, true);
     ctxt.stroke();
@@ -225,26 +229,81 @@ const makeDrawing = () => {
   return c;
 };
 
-const minDist = 3;
+const makeMarkerDrawing = () => {
+  if (!markerDrawing) {
+    markerDrawing = document.createElement('canvas');
+    markerDrawing.width = bgDrawing.width;
+    markerDrawing.height = bgDrawing.height;
+    markerDrawing.style.width = bgDrawing.width+'px';
+    markerDrawing.style.height = bgDrawing.height+'px';
+  }
+  let ctxt = markerDrawing.getContext('2d');
+  ctxt.clearRect(0, 0, markerDrawing.width, markerDrawing.height);
+  if (isOver) {
+    let realX = x - holdingDiv.offsetLeft;
+    let realY = y - holdingDiv.offsetTop;
+    ctxt.strokeStyle = '#808';
+    ctxt.lineWidth = 0.5;
+    ctxt.beginPath();
+    ctxt.moveTo(markerDrawing.height, markerDrawing.height);
+    ctxt.lineTo(realX, realY);
+    ctxt.stroke();
+    ctxt.lineWidth = 1.5;
+    ctxt.beginPath();
+    ctxt.moveTo(realX-8, realY);
+    ctxt.lineTo(realX+8, realY);
+    ctxt.stroke();
+    ctxt.beginPath();
+    ctxt.moveTo(realX, realY-8);
+    ctxt.lineTo(realX, realY+8);
+    ctxt.stroke();
+  }
+};
 
-let drawing, x, y, isOver = false;
-
-const play = () => {
+const play = (audioBuffer) => {
+  console.log(isOver);
   if (!isOver) return;
-  let w = drawing.width;
-  let h = drawing.height;
+  let w = bgDrawing.width;
+  let h = bgDrawing.height;
   let unit = h/10;
-  let realX = (h - (x - drawing.offsetLeft))/unit;
-  let realY = (h - (y - drawing.offsetTop))/unit;
+  let realX = (h - (x - holdingDiv.offsetLeft))/unit;
+  let realY = (h - (y - holdingDiv.offsetTop))/unit;
   let r = 0.1;
   let d = Math.sqrt(realX*realX + realY*realY);
-  if (d<3) return;
+  if (d<minDist) return;
   let dL = Math.sqrt((-r-realX)*(-r-realX) + realY*realY);
   let dR = Math.sqrt((r-realX)*(r-realX) + realY*realY);
   let leftDelay = dL/330;
-  let rightDelay = dL/330;
+  let rightDelay = dR/330;
   let baseAmp = (minDist*minDist)/(d*d);
   let reverbAmp = minDist/d;
+  let cos = realX/d;
+  let a = Math.acos(cos);
+  console.log(a);
+  let rightAmp = Math.sin(.5*a);
+  let leftAmp = Math.cos(.5*a);
+  console.log(realX, d, cos, rightAmp, leftAmp);
+  let source = new AudioBufferSourceNode(ac, {buffer: audioBuffer});
+  let splitter = new ChannelSplitterNode(ac);
+  let lDelay = new DelayNode(ac, {delayTime: leftDelay});
+  let rDelay = new DelayNode(ac, {delayTime: rightDelay});
+  let lGain = new GainNode(ac, {gain: leftAmp});
+  let rGain = new GainNode(ac, {gain: rightAmp});
+  let merger = new ChannelMergerNode(ac);
+  source.connect(splitter);
+  splitter.connect(lDelay, 0);
+  splitter.connect(rDelay, 0);
+  lDelay.connect(lGain);
+  rDelay.connect(rGain);
+  lGain.connect(merger, 0, 0);
+  rGain.connect(merger, 0, 1);
+  let dryGain = new GainNode(ac, {gain:baseAmp});
+  let wetGain = new GainNode(ac, {gain:reverbAmp});
+  merger.connect(dryGain);
+  merger.connect(wetGain);
+  wetGain.connect(reverbNode);
+  dryGain.connect(ac.destination);
+  source.start();
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -259,28 +318,47 @@ window.addEventListener('DOMContentLoaded', () => {
 	loadReverb(e.target.value);
       });
       document.body.appendChild(s);
-      samplePaths.forEach((p, i) => {
-	document.body.addElem('p', '', makeLink('', p, null, (e) => {
-	  e.addEventListener('click', () => {
-	    let absn = new AudioBufferSourceNode(ac, {buffer: sounds[i]});
-	    absn.connect(reverbNode);
-	    absn.start();
-	  });
-	}));
-      });
-      drawing = makeDrawing();
-      drawing.addEventListener('mouseenter', (e) => {
+      // samplePaths.forEach((p, i) => {
+      // 	document.body.addElem('p', '', makeLink('', p, null, (e) => {
+      // 	  e.addEventListener('click', () => {
+      // 	    let absn = new AudioBufferSourceNode(ac, {buffer: sounds[i]});
+      // 	    absn.connect(reverbNode);
+      // 	    absn.start();
+      // 	  });
+      // 	}));
+      // });
+      holdingDiv = makeDiv('', '');
+      holdingDiv.style.position = 'relative';
+      document.body.appendChild(holdingDiv);
+      bgDrawing = makeDrawing();
+      bgDrawing.style.position = 'absolute';
+      bgDrawing.style.top = '0px';
+      bgDrawing.style.left = '0px';
+      holdingDiv.appendChild(bgDrawing);
+      makeMarkerDrawing();
+      markerDrawing.style.position = 'absolute';
+      markerDrawing.style.top = '0px';
+      markerDrawing.style.left = '0px';
+      holdingDiv.appendChild(markerDrawing);
+      markerDrawing.addEventListener('mouseenter', (e) => {
 	isOver = true;
+	makeMarkerDrawing();
       });
-      drawing.addEventListener('mouseleave', (e) => {
+      markerDrawing.addEventListener('mouseleave', (e) => {
 	isOver = false;
+	makeMarkerDrawing();
       });
-      drawing.addEventListener('mousemove', (e) => {
+      markerDrawing.addEventListener('mousemove', (e) => {
 	isOver = true;
 	x = e.clientX;
 	y = e.clientY;
+	makeMarkerDrawing();
       });
-      document.body.appendChild(drawing);
+      document.body.addEventListener('keydown', (e) => {
+	let id = e.keyCode-49;
+	console.log(id);
+	if (id >= 0 && id < sounds.length) play (sounds[id]);
+      });
     });
   // let button = document.createElement('button');
   // button.innerHTML = 'Play';
