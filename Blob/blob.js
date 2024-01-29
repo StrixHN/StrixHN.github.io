@@ -223,6 +223,24 @@
     // pullRandomPoint();
     // for (let i=0; i<1000; i++)
     //   moveStep();
+    let img = new Image();
+    img.src = "strix3.png";
+    let h = Math.floor(height / 3);
+    let t = Math.floor((height-h)/2);
+    let w = Math.round(h*798/589);
+    let l = Math.round((width-w)/2);
+    img.style.position = 'absolute';
+    img.style.top = t+'px';
+    img.style.left = l+'px';
+    img.style.width = w+'px';
+    img.style.height = h+'px';
+    img.style.filter = 'brightness(0)';
+    setTimeout(() => {
+      img.style.transition = 'filter 10s ease-in';
+      img.style.filter = 'brightness(1)';
+    });
+    document.body.appendChild(img);
+    // 798 x 589
     animate();
   });
 
