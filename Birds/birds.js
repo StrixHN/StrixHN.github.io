@@ -134,7 +134,6 @@ const samplePaths = [
   'crackle/crackle_5'
 ];
 
-
 const samples = [];
 
 for (let p of samplePaths) {
