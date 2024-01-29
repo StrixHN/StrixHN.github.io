@@ -43,10 +43,6 @@
     noise = canvas;
   };
 
-
-
-
-
   
   const nbPoints = 59;
   const weight = 3;
