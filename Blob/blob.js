@@ -208,13 +208,14 @@
 
 
   let logoContext, logoFront, logoBack;
+  let dpr = window.devicePixelRatio ? Math.max(window.devicePixelRatio, 1) : 1;
   function animateLogo () {
     if (!act) {
       let w = logoContext.canvas.width;
       let h = logoContext.canvas.height;
       logoContext.clearRect(0, 0, w, h);
-      logoContext.drawImage(logoBack, 3*Math.random()-1.5, 3*Math.random()-1.5, w, h);
-      logoContext.drawImage(logoFront, .3*Math.random()-.15, .3*Math.random()-.15, w, h);
+      logoContext.drawImage(logoBack, dpr*(3*Math.random()-1.5), dpr*(3*Math.random()-1.5), w, h);
+      logoContext.drawImage(logoFront, dpr*(.3*Math.random()-.15), dpr*(.3*Math.random()-.15), w, h);
     }
     requestAnimationFrame(animateLogo);
   }
