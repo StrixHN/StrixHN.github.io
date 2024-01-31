@@ -241,8 +241,12 @@
 
     
     let h = Math.floor(height / 3);
-    let t = Math.floor((height-h)/2);
     let w = Math.round(h*798/589);
+    if (w > width/2) {
+      w = Math.floor(width/2);
+      h = Math.round(w*589/798);
+    }
+    let t = Math.floor((height-h)/2);
     let l = Math.round((width-w)/2);
     
     let imgCanvas = document.createElement('canvas');
