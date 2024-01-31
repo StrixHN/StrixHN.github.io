@@ -2,8 +2,6 @@
 
   let noise = null;
   const dotSize = 2;
-
-  let onScreen, onScreenContext;
   
   const makeZones = (w, h) => {
     let colDots = [];
@@ -133,25 +131,32 @@
     // step += 1;
     let cx = points.reduce((acc, p) => acc + p.x, 0) / nbPoints;
     let cy = points.reduce((acc, p) => acc + p.y, 0) / nbPoints;
-    let dx = 2 * cx / width - 1;
-    let dy = 2 * cy / height - 1;
-    if (Math.abs(dx) > 0.8) {
-      if (dx > 0)
-	cx -= .5*width*Math.random();
-      else
-	cx += .5*width*Math.random();
-    }
-    if (Math.abs(dy) > 0.8) {
-      if (dy > 0)
-	cy -= .5*height*Math.random();
-      else
-	cy += .5*height*Math.random();
-    }
+
+    
+    // let dx = 2 * cx / width - 1;
+    // let dy = 2 * cy / height - 1;
+    // if (Math.abs(dx) > 0.8) {
+    //   if (dx > 0)
+    // 	cx -= .5*width*Math.random();
+    //   else
+    // 	cx += .5*width*Math.random();
+    // }
+    // if (Math.abs(dy) > 0.8) {
+    //   if (dy > 0)
+    // 	cy -= .5*height*Math.random();
+    //   else
+    // 	cy += .5*height*Math.random();
+    // }
+
+    cx = Math.min(.75*width, Math.max(.25*width, cx));
+    cy = Math.min(.75*height, Math.max(.25*height, cy));
+    
     for (let i in points) {
       let f = totalForce(1*i, cx, cy);
       points[i].dx += f.x / weight;
       points[i].dy += f.y / weight;
     }
+    
     for (let p of points) {
       p.x += timeScale * p.dx;
       p.y += timeScale * p.dy;
@@ -201,48 +206,89 @@
     requestAnimationFrame(animate);
   }
 
+
+  let logoContext, logoFront, logoBack;
+  function animateLogo () {
+    if (!act) {
+      let w = logoContext.canvas.width;
+      let h = logoContext.canvas.height;
+      logoContext.clearRect(0, 0, w, h);
+      logoContext.drawImage(logoBack, 3*Math.random()-1.5, 3*Math.random()-1.5, w, h);
+      logoContext.drawImage(logoFront, .3*Math.random()-.15, .3*Math.random()-.15, w, h);
+    }
+    requestAnimationFrame(animateLogo);
+  }
   
   window.addEventListener('DOMContentLoaded', () => {
     width = window.innerWidth;
     height = window.innerHeight;
-    let onScreen = document.createElement('canvas');
-    onScreen.style.position = 'absolute';
-    onScreen.style.top = '0px';
-    onScreen.style.left = '0px';
-    onScreen.style.width = width+'px';
-    onScreen.style.height = height+'px';
-    onScreen.width = width;
-    onScreen.height = height;
-    document.body.appendChild(onScreen);
-    context = onScreen.getContext('2d');
+    let noiseCanvas = document.createElement('canvas');
+    noiseCanvas.style.position = 'absolute';
+    noiseCanvas.style.top = '0px';
+    noiseCanvas.style.left = '0px';
+    noiseCanvas.style.width = width+'px';
+    noiseCanvas.style.height = height+'px';
+    noiseCanvas.width = width;
+    noiseCanvas.height = height;
+    document.body.appendChild(noiseCanvas);
+    context = noiseCanvas.getContext('2d');
     context.fillStyle = '#000';
     context.fillRect(0, 0, width, height);
     makeZones(width, height);
     createBlob(width/2, height/2, Math.min(width, height)/8);
     pullRandomPoint();
-    // pullRandomPoint();
-    // for (let i=0; i<1000; i++)
-    //   moveStep();
-    let img = new Image();
-    img.src = "strix3.png";
+    animate();
+
+    
     let h = Math.floor(height / 3);
     let t = Math.floor((height-h)/2);
     let w = Math.round(h*798/589);
     let l = Math.round((width-w)/2);
-    img.style.position = 'absolute';
-    img.style.top = t+'px';
-    img.style.left = l+'px';
-    img.style.width = w+'px';
-    img.style.height = h+'px';
-    img.style.filter = 'brightness(0)';
+    
+    let imgCanvas = document.createElement('canvas');
+    imgCanvas.style.position = 'absolute';
+    imgCanvas.style.top = t+'px';
+    imgCanvas.style.left = l+'px';
+    imgCanvas.style.width = w+'px';
+    imgCanvas.style.height = h+'px';
+    imgCanvas.style.filter = 'brightness(0)';
     setTimeout(() => {
-      img.style.transition = 'filter 10s ease-in';
-      img.style.filter = 'brightness(1)';
+      imgCanvas.style.transition = 'filter 10s ease-in';
+      imgCanvas.style.filter = 'brightness(1.1)';
     });
-    document.body.appendChild(img);
+    document.body.appendChild(imgCanvas);
+    logoContext = imgCanvas.getContext('2d');
+    
+    let img = new Image();
+    img.onload = () => {
+      logoBack = getFiltered(img, '#306');
+      logoFront = getFiltered(img, '#723');
+      animateLogo();
+    };
+    img.src = "strix.png";
     // 798 x 589
-    animate();
   });
 
+
+  function copyToCanvas(image) {
+    const can = document.createElement("canvas");
+    can.width = image.naturalWidth || image.width;
+    can.height = image.naturalHeight || image.height;
+    can.ctx = can.getContext("2d");
+    can.ctx.drawImage(image, 0, 0);
+    return can;
+  }
+
+  function getFiltered(image, color) {
+    const copy = copyToCanvas(image);
+    const ctx = copy.ctx;
+    ctx.fillStyle = color;
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.globalCompositeOperation = "destination-in";
+    ctx.drawImage(image, 0, 0);
+    ctx.globalCompositeOperation = "source-over";
+    return copy;
+  }
   
 })();
